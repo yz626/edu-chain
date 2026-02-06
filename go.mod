@@ -1,4 +1,4 @@
-module github.com/yz627/edu-chain
+module github.com/yz626/edu-chain
 
 go 1.24.0
 

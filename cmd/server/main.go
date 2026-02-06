@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/yz627/edu-chain/config"
-	"github.com/yz627/edu-chain/internal/server"
+	"github.com/yz626/edu-chain/config"
+	"github.com/yz626/edu-chain/internal/server"
 )
 
 func main() {

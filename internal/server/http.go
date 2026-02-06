@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yz627/edu-chain/config"
-	middleware "github.com/yz627/edu-chain/internal/routes/middleware/casbin"
+	"github.com/yz626/edu-chain/config"
+	middleware "github.com/yz626/edu-chain/internal/routes/middleware/casbin"
 )
 
 // HTTP HTTP服务器
