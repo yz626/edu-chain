@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
+
+// ==================== 审计日志相关消息 ====================
+
+// 登录日志
+message LoginLog {
+  string id = 1;
+  string user_id = 2;
+  string ip = 3;
+  string user_agent = 4;
+  string location = 5; // 登录地点
+  bool success = 6;
+  string reason = 7; // 失败原因
+  int64 login_at = 8;
+}
+
+// 获取登录日志请求
+message GetLoginLogsRequest {
+  string user_id = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+// 获取登录日志响应
+message GetLoginLogsResponse {
+  repeated LoginLog logs = 1;
+  int32 total = 2;
+}
+
+// ==================== 服务定义 ====================
+
+service AuditService {
+  // 审计日志
+  rpc GetLoginLogs(GetLoginLogsRequest) returns (GetLoginLogsResponse);
+}

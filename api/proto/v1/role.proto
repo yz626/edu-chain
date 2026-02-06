@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
+
+import "google/protobuf/empty.proto";
+
+// ==================== 枚举定义 ====================
+
+// 角色类型
+enum RoleType {
+  ROLE_TYPE_UNSPECIFIED = 0;
+  ROLE_TYPE_SUPER_ADMIN = 1; // 超级管理员
+  ROLE_TYPE_AUDITOR = 2; // 审计员
+  ROLE_TYPE_OPERATOR = 3; // 操作员
+  ROLE_TYPE_SCHOOL_ADMIN = 4; // 校管理员
+  ROLE_TYPE_DEPARTMENT_ADMIN = 5; // 院系管理员
+  ROLE_TYPE_HR = 6; // 企业HR
+  ROLE_TYPE_STUDENT = 8; // 学生
+}
+
+// ==================== 角色权限相关消息 ====================
+
+// 角色
+message Role {
+  string id = 1;
+  string name = 2; // 角色名称
+  string code = 3; // 角色代码
+  RoleType type = 4;
+  string description = 5;
+  string organization_id = 6; // 所属组织（为空表示系统角色）
+  repeated Permission permissions = 7;
+  int64 created_at = 8;
+}
+
+// 权限
+message Permission {
+  string id = 1;
+  string code = 2; // 权限代码
+  string name = 3; // 权限名称
+  string resource = 4; // 资源类型（user、certificate、verification等）
+  string action = 5; // 操作类型（create、read、update、delete等）
+}
+
+// 用户角色关联
+message UserRole {
+  string user_id = 1;
+  string role_id = 2;
+  int64 granted_at = 3;
+  string granted_by = 4; // 授权人
+  int64 expires_at = 5; // 过期时间（可选）
+}
+
+// 分配角色请求
+message AssignRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+  int64 expires_at = 3; // 可选的过期时间
+}
+
+// ==================== 服务定义 ====================
+
+// 列出角色请求
+message ListRolesRequest {
+  string organization_id = 1; // 可选，按组织筛选
+}
+
+// 服务定义
+service RoleService {
+  // 角色权限管理
+  rpc AssignRole(AssignRoleRequest) returns (UserRole);
+  rpc RevokeRole(AssignRoleRequest) returns (google.protobuf.Empty);
+  rpc ListRoles(ListRolesRequest) returns (repeated Role);
+}

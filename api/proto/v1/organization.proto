@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
+
+import "google/protobuf/empty.proto";
+
+// ==================== 枚举定义 ====================
+
+// 组织类型
+enum OrganizationType {
+  ORGANIZATION_TYPE_UNSPECIFIED = 0;
+  ORGANIZATION_TYPE_SUPERVISOR = 1; // 监管机构
+  ORGANIZATION_TYPE_UNIVERSITY = 2; // 高校
+  ORGANIZATION_TYPE_COMPANY = 3; // 企业
+  ORGANIZATION_TYPE_GOVERNMENT = 4; // 政府机构
+  ORGANIZATION_TYPE_OTHER = 5; // 其他
+}
+
+// ==================== 组织相关消息 ====================
+
+// 组织（高校/机构）
+message Organization {
+  string id = 1;
+  string name = 2; // 组织名称
+  string code = 3; // 组织代码（高校代码等）
+  OrganizationType type = 4;
+  string address = 5; // 地址
+  string website = 6; // 网站
+  string contact_name = 7; // 联系人
+  string contact_phone = 8; // 联系电话
+  string contact_email = 9; // 联系邮箱
+  string logo = 10; // Logo URL
+  bool is_active = 11;
+  int64 created_at = 12;
+  int64 updated_at = 13;
+}
+
+// 创建组织请求
+message CreateOrganizationRequest {
+  string name = 1;
+  string code = 2;
+  OrganizationType type = 3;
+  string address = 4;
+  string website = 5;
+  string contact_name = 6;
+  string contact_phone = 7;
+  string contact_email = 8;
+}
+
+// 更新组织请求
+message UpdateOrganizationRequest {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  string website = 4;
+  string contact_name = 5;
+  string contact_phone = 6;
+  string contact_email = 7;
+  string logo = 8;
+}
+
+// 组织用户关联
+message OrganizationUser {
+  string organization_id = 1;
+  string user_id = 2;
+  string department = 3; // 部门
+  string position = 4; // 职位
+  bool is_primary = 5; // 是否主组织
+  int64 joined_at = 6;
+}
+
+// 添加组织成员请求
+message AddOrganizationMemberRequest {
+  string organization_id = 1;
+  string user_id = 2;
+  string department = 3;
+  string position = 4;
+}
+
+// 分页查询组织请求
+message ListOrganizationsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;
+  OrganizationType type = 4;
+  bool is_active = 5;
+}
+
+// 分页查询组织响应
+message ListOrganizationsResponse {
+  repeated Organization organizations = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// 获取组织成员请求
+message GetOrganizationMembersRequest {
+  string organization_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string keyword = 4;
+}
+
+// 获取组织请求
+message GetOrganizationRequest {
+  string id = 1;
+}
+
+// 获取组织成员响应
+message GetOrganizationMembersResponse {
+  repeated string user_ids = 1; // 用户ID列表
+  int32 total = 2;
+}
+
+// ==================== 服务定义 ====================
+
+service OrganizationService {
+  // 组织管理
+  rpc CreateOrganization(CreateOrganizationRequest) returns (Organization);
+  rpc UpdateOrganization(UpdateOrganizationRequest) returns (Organization);
+  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse);
+  rpc GetOrganization(GetOrganizationRequest) returns (Organization);
+  
+  // 组织成员管理
+  rpc AddOrganizationMember(AddOrganizationMemberRequest) returns (google.protobuf.Empty);
+  rpc RemoveOrganizationMember(AddOrganizationMemberRequest) returns (google.protobuf.Empty);
+  rpc GetOrganizationMembers(GetOrganizationMembersRequest) returns (GetOrganizationMembersResponse);
+}
