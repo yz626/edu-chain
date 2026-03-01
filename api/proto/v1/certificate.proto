@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
