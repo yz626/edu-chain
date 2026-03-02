@@ -57,6 +57,50 @@ type RabbitMQConfig struct {
 
 // BlockchainConfig 区块链配置
 type BlockchainConfig struct {
+	// 区块链类型: fiscobcos, ethereum, fabric
+	Type      string          `mapstructure:"type"`
+	FISCOBCOS FISCOBCOSConfig `mapstructure:"fiscobcos"`
+	Ethereum  EthereumConfig  `mapstructure:"ethereum"`
+	Fabric    FabricConfig    `mapstructure:"fabric"`
+}
+
+// FISCOBCOSConfig FISCO BCOS配置
+type FISCOBCOSConfig struct {
+	// 节点连接信息
+	NodeURL  string   `mapstructure:"node_url"`  // 节点RPC地址，如: http://127.0.0.1:8545
+	NodeURLs []string `mapstructure:"node_urls"` // 多个节点地址（群组模式）
+
+	// 群组信息
+	GroupID string `mapstructure:"group_id"` // 群组ID，默认: 1
+
+	// 链上账户
+	AccountKey     string `mapstructure:"account_key"`      // 账户私钥路径或十六进制
+	AccountKeyFile string `mapstructure:"account_key_file"` // 私钥文件路径
+	AccountCert    string `mapstructure:"account_cert"`     // 账户证书路径
+
+	// 连接池配置
+	MaxConns int `mapstructure:"max_conns"` // 最大连接数
+	Timeout  int `mapstructure:"timeout"`   // 超时时间(秒)
+
+	// 合约配置
+	ContractAddress string `mapstructure:"contract_address"` // 部署的合约地址
+	ContractABI     string `mapstructure:"contract_abi"`     // 合约ABI JSON
+
+	// 链ID
+	ChainID int `mapstructure:"chain_id"` // 链ID
+}
+
+// EthereumConfig 以太坊配置
+type EthereumConfig struct {
+	NetworkID   string `mapstructure:"network_id"`
+	ChannelName string `mapstructure:"channel_name"`
+	Chaincode   string `mapstructure:"chaincode"`
+	PeerURL     string `mapstructure:"peer_url"`
+	OrdererURL  string `mapstructure:"orderer_url"`
+}
+
+// FabricConfig Fabric配置
+type FabricConfig struct {
 	NetworkID   string `mapstructure:"network_id"`
 	ChannelName string `mapstructure:"channel_name"`
 	Chaincode   string `mapstructure:"chaincode"`

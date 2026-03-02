@@ -1,0 +1,289 @@
+# ===========================================
+# edu-chain 配置文件示例
+# ===========================================
+
+# 服务配置
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "debug"  # debug, release
+
+# 数据库配置
+database:
+  host: "localhost"
+  port: 5432
+  username: "postgres"
+  password: "postgres"
+  name: "edu_chain"
+  sslmode: "disable"
+  max_open: 10
+  max_idle: 5
+
+# Redis配置
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+# RabbitMQ配置（可选）
+rabbitmq:
+  host: "localhost"
+  port: 5672
+  username: "guest"
+  password: "guest"
+  vhost: "/"
+
+# ===========================================
+# 区块链配置 - FISCO BCOS 2.0
+# ===========================================
+blockchain:
+  # 区块链类型: fiscobcos, ethereum, fabric
+  type: "fiscobcos"
+  
+  # FISCO BCOS配置
+  fiscobcos:
+    # 节点RPC地址（单节点模式）
+    node_url: "http://127.0.0.1:8545"
+    
+    # 多个节点地址（群组模式/高可用）
+    # node_urls:
+    #   - "http://127.0.0.1:8545"
+    #   - "http://127.0.0.1:8546"
+    #   - "http://127.0.0.1:8547"
+    
+    # 群组ID
+    group_id: "1"
+    
+    # 链ID
+    chain_id: 1
+    
+    # 账户私钥（十六进制字符串或文件路径）
+    # 方式1: 直接使用十六进制私钥
+    account_key: "your-private-key-hex-string"
+    
+    # 方式2: 使用私钥文件
+    # account_key_file: "./keys/private.key"
+    
+    # 账户证书（可选，用于国密版本）
+    # account_cert: "./certs/node.crt"
+    
+    # 连接池配置
+    max_conns: 10
+    timeout: 30
+    
+    # 智能合约配置
+    contract_address: "0x0000000000000000000000000000000000001000"
+    contract_abi: |
+      [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "string",
+              "name": "certId",
+              "type": "string"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "issuer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "CertificateIssued",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "string",
+              "name": "certId",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "reason",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "CertificateRevoked",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_issuer",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "_name",
+              "type": "string"
+            }
+          ],
+          "name": "addIssuer",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_certId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_studentId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_studentName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_courseName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_courseScore",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_issueDate",
+              "type": "uint256"
+            }
+          ],
+          "name": "issueCertificate",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_certId",
+              "type": "string"
+            }
+          ],
+          "name": "queryCertificate",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_certId",
+              "type": "string"
+            }
+          ],
+          "name": "verifyCertificate",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_certId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_reason",
+              "type": "string"
+            }
+          ],
+          "name": "revokeCertificate",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+
+# ===========================================
+# JWT配置
+# ===========================================
+jwt:
+  secret: "your-secret-key-change-in-production"
+  expiry: 86400  # 24小时（秒）
