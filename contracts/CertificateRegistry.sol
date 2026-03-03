@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.4.25;
 
 /**
  * @title CertificateRegistry
@@ -7,46 +7,42 @@ pragma solidity ^0.8.0;
  */
 contract CertificateRegistry {
     
-    // 证书结构体
-    struct Certificate {
-        string certId;           // 证书唯一ID
-        string studentId;        // 学号
-        string studentName;      // 学生姓名
-        string courseName;       // 课程名称
-        string courseScore;      // 课程成绩
-        string issuer;           // 颁发机构
-        uint256 issueDate;       // 颁发日期(时间戳)
-        bool revoked;            // 是否已撤销
-        string revokeReason;     // 撤销原因
-    }
-    
     // 证书事件
     // 证书颁发事件
     event CertificateIssued(
-        string indexed certId, 
+        string certId, 
         address indexed issuer,
         uint256 timestamp
     );
     
     // 撤销证书事件
     event CertificateRevoked(
-        string indexed certId,
+        string certId,
         string reason,
         uint256 timestamp
     );
     
-    // 存储证书的映射
+    // 存储证书的映射 - 使用单独的映射存储每个字段以避免栈溢出
     // key: 证书ID
-    // value: 证书结构体
-    mapping(string => Certificate) public certificates;
+    mapping(string => string) private certStudentIds;
+    mapping(string => string) private certStudentNames;
+    mapping(string => string) private certCourseNames;
+    mapping(string => string) private certCourseScores;
+    mapping(string => string) private certIssuers;
+    mapping(string => uint256) private certIssueDates;
+    mapping(string => bool) private certRevoked;
+    mapping(string => string) private certRevokeReasons;
     
     // 地址到机构名称的映射
-    // key: 地址
+    // key: 区块链地址
     // value: 机构名称
-    mapping(address => string) public issuers;
+    mapping(address => string) private issuers;
+    
+    // 证书总数
+    uint256 private certificateCount;
     
     // 合约所有者
-    address public owner;
+    address private owner;
     
     // 修饰符：仅合约所有者
     modifier onlyOwner() {
@@ -70,13 +66,104 @@ contract CertificateRegistry {
      * @param _issuer 机构地址
      * @param _name 机构名称
      */
-    function addIssuer(address _issuer, string memory _name) public onlyOwner {
+    function addIssuer(address _issuer, string _name) public onlyOwner {
         issuers[_issuer] = _name;
     }
     
     /**
-     * @dev 颁发证书
-     * @param _certId 证书ID
+     * @dev 自动生成证书ID
+     * @return string 生成的证书ID
+     */
+    function generateCertId() private view returns (string) {
+        // 使用 block.number + block.timestamp + 颁发者 + 证书数量 生成唯一ID
+        bytes32 hash = keccak256(
+            block.number,
+            block.timestamp,
+            msg.sender,
+            certificateCount + 1
+        );
+        
+        // 转换为十六进制字符串
+        return bytes32ToString(hash);
+    }
+    
+    /**
+     * @dev bytes32 转 string
+     */
+    function bytes32ToString(bytes32 _bytes32) private pure returns (string) {
+        bytes memory bytesString = new bytes(64);
+        for (uint8 i = 0; i < 32; i++) {
+            bytes1 b = bytes1(_bytes32[i]);
+            bytes1 char = bytes1(uint8(b) / 16);
+            bytesString[i * 2] = charToHexString(char);
+            char = bytes1(uint8(b) - 16 * uint8(char));
+            bytesString[i * 2 + 1] = charToHexString(char);
+        }
+        return string(bytesString);
+    }
+    
+    /**
+     * @dev 单字节转十六进制字符
+     */
+    function charToHexString(bytes1 _char) private pure returns (bytes1) {
+        if (_char >= 0x30 && _char <= 0x39) {
+            return bytes1(uint8(_char) - 0x30);
+        } else if (_char >= 0x61 && _char <= 0x66) {
+            return bytes1(uint8(_char) - 0x61 + 10);
+        } else if (_char >= 0x41 && _char <= 0x46) {
+            return bytes1(uint8(_char) - 0x41 + 10);
+        }
+        return bytes1(0x30);
+    }
+    
+    /**
+     * @dev 检查证书是否存在
+     */
+    function certExists(string _certId) private view returns (bool) {
+        return bytes(certStudentIds[_certId]).length > 0;
+    }
+    
+    /**
+     * @dev 自动颁发证书（合约自动生成ID）
+     * @param _studentId 学号
+     * @param _studentName 学生姓名
+     * @param _courseName 课程名称
+     * @param _courseScore 课程成绩
+     * @param _issueDate 颁发日期
+     * @return string 生成的证书ID
+     */
+    function issueCertificateAuto(
+        string _studentId,
+        string _studentName,
+        string _courseName,
+        string _courseScore,
+        uint256 _issueDate
+    ) public onlyIssuer returns (string) {
+        // 自动生成证书ID
+        string memory certId = generateCertId();
+        
+        // 检查ID是否已存在
+        require(!certExists(certId), "Certificate ID collision");
+        
+        // 存储证书数据到各个映射
+        certStudentIds[certId] = _studentId;
+        certStudentNames[certId] = _studentName;
+        certCourseNames[certId] = _courseName;
+        certCourseScores[certId] = _courseScore;
+        certIssuers[certId] = issuers[msg.sender];
+        certIssueDates[certId] = _issueDate;
+        certRevoked[certId] = false;
+        
+        certificateCount++;
+        
+        CertificateIssued(certId, msg.sender, block.timestamp);
+        
+        return certId;
+    }
+    
+    /**
+     * @dev 颁发证书（手动指定ID）
+     * @param _certId 证书ID（手动传入）
      * @param _studentId 学号
      * @param _studentName 学生姓名
      * @param _courseName 课程名称
@@ -84,56 +171,63 @@ contract CertificateRegistry {
      * @param _issueDate 颁发日期
      */
     function issueCertificate(
-        string memory _certId,
-        string memory _studentId,
-        string memory _studentName,
-        string memory _courseName,
-        string memory _courseScore,
+        string _certId,
+        string _studentId,
+        string _studentName,
+        string _courseName,
+        string _courseScore,
         uint256 _issueDate
     ) public onlyIssuer {
-        require(bytes(certificates[_certId].certId).length == 0, "Certificate already exists");
+        require(!certExists(_certId), "Certificate already exists");
         
-        certificates[_certId] = Certificate({
-            certId: _certId,
-            studentId: _studentId,
-            studentName: _studentName,
-            courseName: _courseName,
-            courseScore: _courseScore,
-            issuer: issuers[msg.sender],
-            issueDate: _issueDate,
-            revoked: false,
-            revokeReason: ""
-        });
+        // 存储证书数据到各个映射
+        certStudentIds[_certId] = _studentId;
+        certStudentNames[_certId] = _studentName;
+        certCourseNames[_certId] = _courseName;
+        certCourseScores[_certId] = _courseScore;
+        certIssuers[_certId] = issuers[msg.sender];
+        certIssueDates[_certId] = _issueDate;
+        certRevoked[_certId] = false;
         
-        emit CertificateIssued(_certId, msg.sender, block.timestamp);
+        certificateCount++;
+        
+        CertificateIssued(_certId, msg.sender, block.timestamp);
     }
     
     /**
-     * @dev 查询证书
+     * @dev 查询证书完整信息
      * @param _certId 证书ID
      */
-    function queryCertificate(string memory _certId) public view returns (
-        string memory,
-        string memory,
-        string memory,
-        string memory,
-        string memory,
-        string memory,
+    function queryCertificate(string _certId) public view returns (
+        string,
+        string,
+        string,
+        string,
+        string
+    ) {
+        require(certExists(_certId), "Certificate not found");
+        
+        return (
+            certStudentIds[_certId],
+            certStudentNames[_certId],
+            certCourseNames[_certId],
+            certCourseScores[_certId],
+            certIssuers[_certId]
+        );
+    }
+    
+    /**
+     * @dev 查询证书颁发日期和状态
+     */
+    function queryCertificateExtra(string _certId) public view returns (
         uint256,
         bool
     ) {
-        Certificate memory cert = certificates[_certId];
-        require(bytes(cert.certId).length > 0, "Certificate not found");
+        require(certExists(_certId), "Certificate not found");
         
         return (
-            cert.certId,
-            cert.studentId,
-            cert.studentName,
-            cert.courseName,
-            cert.courseScore,
-            cert.issuer,
-            cert.issueDate,
-            cert.revoked
+            certIssueDates[_certId],
+            certRevoked[_certId]
         );
     }
     
@@ -142,9 +236,8 @@ contract CertificateRegistry {
      * @param _certId 证书ID
      * @return bool 证书是否存在且未撤销
      */
-    function verifyCertificate(string memory _certId) public view returns (bool) {
-        Certificate memory cert = certificates[_certId];
-        return bytes(cert.certId).length > 0 && !cert.revoked;
+    function verifyCertificate(string _certId) public view returns (bool) {
+        return certExists(_certId) && !getRevoked(_certId);
     }
     
     /**
@@ -152,20 +245,93 @@ contract CertificateRegistry {
      * @param _certId 证书ID
      * @param _reason 撤销原因
      */
-    function revokeCertificate(string memory _certId, string memory _reason) public onlyIssuer {
-        require(bytes(certificates[_certId].certId).length > 0, "Certificate not found");
-        require(!certificates[_certId].revoked, "Certificate already revoked");
+    function revokeCertificate(string _certId, string _reason) public onlyIssuer {
+        require(certExists(_certId), "Certificate not found");
+        require(!getRevoked(_certId), "Certificate already revoked");
         
-        certificates[_certId].revoked = true;
-        certificates[_certId].revokeReason = _reason;
+        certRevoked[_certId] = true;
+        certRevokeReasons[_certId] = _reason;
         
-        emit CertificateRevoked(_certId, _reason, block.timestamp);
+        certificateCount--;
+        
+        CertificateRevoked(_certId, _reason, block.timestamp);
     }
     
     /**
-     * @dev 获取证书数量（演示用）
+     * @dev 获取证书数量
+     * @return uint256 已颁发的证书总数
      */
     function getCertificateCount() public view returns (uint256) {
-        return 0; // 实际实现需要额外存储
+        return certificateCount;
+    }
+    
+    /**
+     * @dev 获取学号
+     */
+    function getStudentId(string _certId) public view returns (string) {
+        return certStudentIds[_certId];
+    }
+    
+    /**
+     * @dev 获取学生姓名
+     */
+    function getStudentName(string _certId) public view returns (string) {
+        return certStudentNames[_certId];
+    }
+    
+    /**
+     * @dev 获取课程名称
+     */
+    function getCourseName(string _certId) public view returns (string) {
+        return certCourseNames[_certId];
+    }
+    
+    /**
+     * @dev 获取课程成绩
+     */
+    function getCourseScore(string _certId) public view returns (string) {
+        return certCourseScores[_certId];
+    }
+    
+    /**
+     * @dev 获取颁发机构
+     */
+    function getIssuer(string _certId) public view returns (string) {
+        return certIssuers[_certId];
+    }
+    
+    /**
+     * @dev 获取颁发日期
+     */
+    function getIssueDate(string _certId) public view returns (uint256) {
+        return certIssueDates[_certId];
+    }
+    
+    /**
+     * @dev 获取撤销状态
+     */
+    function getRevoked(string _certId) public view returns (bool) {
+        return certRevoked[_certId];
+    }
+    
+    /**
+     * @dev 获取撤销原因
+     */
+    function getRevokeReason(string _certId) public view returns (string) {
+        return certRevokeReasons[_certId];
+    }
+    
+    /**
+     * @dev 获取合约所有者
+     */
+    function getOwner() public view returns (address) {
+        return owner;
+    }
+    
+    /**
+     * @dev 获取机构名称
+     */
+    function getIssuerName(address _addr) public view returns (string) {
+        return issuers[_addr];
     }
 }
