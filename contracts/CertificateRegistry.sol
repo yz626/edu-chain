@@ -9,6 +9,9 @@ contract CertificateRegistry {
     
     // 证书事件
     // 证书颁发事件
+    // certId: 证书ID
+    // issuer: 颁发机构地址
+    // timestamp: 颁发时间
     event CertificateIssued(
         string certId, 
         address indexed issuer,
@@ -16,6 +19,9 @@ contract CertificateRegistry {
     );
     
     // 撤销证书事件
+    // certId: 撤销的证书ID
+    // reason: 撤销原因
+    // timestamp: 撤销时间
     event CertificateRevoked(
         string certId,
         string reason,
@@ -77,10 +83,12 @@ contract CertificateRegistry {
     function generateCertId() private view returns (string) {
         // 使用 block.number + block.timestamp + 颁发者 + 证书数量 生成唯一ID
         bytes32 hash = keccak256(
-            block.number,
-            block.timestamp,
-            msg.sender,
-            certificateCount + 1
+            abi.encodePacked(
+                block.number,
+                block.timestamp,
+                msg.sender,
+                certificateCount + 1
+            )
         );
         
         // 转换为十六进制字符串
