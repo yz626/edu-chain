@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/yz626/edu-chain/config"
-	"github.com/yz626/edu-chain/internal/server"
+	"github.com/yz626/edu-chain/internal/data/db"
 )
 
 func main() {
@@ -13,8 +13,8 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	srv := server.NewHTTPServer(conf)
-	if err := srv.Start(); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	// 初始化数据库连接
+	if err := db.Init(conf); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
 	}
 }

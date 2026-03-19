@@ -1,0 +1,37 @@
+# MySQL Docker Compose 配置
+# 用于 edu-chain 项目的MySQL数据库
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: edu-chain-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456      # root密码
+      MYSQL_DATABASE: edu_chain        # 数据库名称
+      MYSQL_USER: edu_chain            # 普通用户（可选）
+      MYSQL_PASSWORD: edu_chain123     # 普通用户密码（可选）
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      # 持久化MySQL数据
+      - mysql_data:/var/lib/mysql
+    command:
+      # MySQL配置参数
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-storage-engine=INNODB
+      - --max_connections=200
+      - --lower_case_table_names=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
+    driver: local
