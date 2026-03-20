@@ -24,3 +24,15 @@ redis:
   password: ""      # Redis密码
   db: 0             # Redis数据库索引
   pool_size: 10     # 连接池大小
+
+# 日志配置
+logger:
+  level: info            # 日志级别 (debug, info, warn, error, fatal)
+  format: json           # 日志格式 (json, console)
+  directory: logs        # 日志目录
+  console: true          # 是否输出到控制台
+  max_size: 100          # 单个日志文件最大大小(MB)
+  max_age: 30            # 日志文件保留天数
+  max_backups: 10        # 保留的日志文件数量
+  compress: true         # 是否压缩日志文件
+  enable_stacktrace: false  # 是否启用堆栈跟踪

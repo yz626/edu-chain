@@ -6,6 +6,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"github.com/yz626/edu-chain/pkg/logger"
 )
 
 // Config 应用配置
@@ -13,6 +14,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	Logger   LoggerConfig   `mapstructure:"logger"`
 }
 
 // ServerConfig 服务器配置
@@ -66,6 +68,36 @@ type RedisConfig struct {
 	PoolSize int    `mapstructure:"pool_size"`
 }
 
+// LoggerConfig 日志配置
+type LoggerConfig struct {
+	Level            string `mapstructure:"level"`
+	Format           string `mapstructure:"format"`
+	Directory        string `mapstructure:"directory"`
+	Console          bool   `mapstructure:"console"`
+	MaxSize          int    `mapstructure:"max_size"`
+	MaxAge           int    `mapstructure:"max_age"`
+	MaxBackups       int    `mapstructure:"max_backups"`
+	Compress         bool   `mapstructure:"compress"`
+	EnableStacktrace bool   `mapstructure:"enable_stacktrace"`
+}
+
+// ToLoggerConfig 转换为日志配置
+func (c *LoggerConfig) ToLoggerConfig() *logger.Config {
+	development := c.Level == "debug"
+	return &logger.Config{
+		Level:            c.Level,
+		Format:           c.Format,
+		Directory:        c.Directory,
+		Console:          c.Console,
+		Development:      development,
+		MaxSize:          c.MaxSize,
+		MaxAge:           c.MaxAge,
+		MaxBackups:       c.MaxBackups,
+		Compress:         c.Compress,
+		EnableStacktrace: c.EnableStacktrace,
+	}
+}
+
 // Load 加载配置
 func Load() (*Config, error) {
 	v := viper.New()
@@ -117,4 +149,15 @@ func setDefaults(v *viper.Viper) {
 
 	v.SetDefault("redis.host", "localhost")
 	v.SetDefault("redis.port", 6379)
+
+	// 日志配置默认值
+	v.SetDefault("logger.level", "info")
+	v.SetDefault("logger.format", "json")
+	v.SetDefault("logger.directory", "logs")
+	v.SetDefault("logger.console", true)
+	v.SetDefault("logger.max_size", 100)
+	v.SetDefault("logger.max_age", 30)
+	v.SetDefault("logger.max_backups", 10)
+	v.SetDefault("logger.compress", true)
+	v.SetDefault("logger.enable_stacktrace", false)
 }
