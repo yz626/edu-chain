@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuditService_GetLoginLogs_FullMethodName = "/api.proto.v1.AuditService/GetLoginLogs"
+	AuditService_GetLoginLogs_FullMethodName     = "/api.proto.v1.AuditService/GetLoginLogs"
+	AuditService_GetOperationLogs_FullMethodName = "/api.proto.v1.AuditService/GetOperationLogs"
 )
 
 // AuditServiceClient is the client API for AuditService service.
@@ -28,6 +29,7 @@ const (
 type AuditServiceClient interface {
 	// 审计日志
 	GetLoginLogs(ctx context.Context, in *GetLoginLogsRequest, opts ...grpc.CallOption) (*GetLoginLogsResponse, error)
+	GetOperationLogs(ctx context.Context, in *GetOperationLogsRequest, opts ...grpc.CallOption) (*GetOperationLogsResponse, error)
 }
 
 type auditServiceClient struct {
@@ -48,12 +50,23 @@ func (c *auditServiceClient) GetLoginLogs(ctx context.Context, in *GetLoginLogsR
 	return out, nil
 }
 
+func (c *auditServiceClient) GetOperationLogs(ctx context.Context, in *GetOperationLogsRequest, opts ...grpc.CallOption) (*GetOperationLogsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOperationLogsResponse)
+	err := c.cc.Invoke(ctx, AuditService_GetOperationLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuditServiceServer is the server API for AuditService service.
 // All implementations must embed UnimplementedAuditServiceServer
 // for forward compatibility.
 type AuditServiceServer interface {
 	// 审计日志
 	GetLoginLogs(context.Context, *GetLoginLogsRequest) (*GetLoginLogsResponse, error)
+	GetOperationLogs(context.Context, *GetOperationLogsRequest) (*GetOperationLogsResponse, error)
 	mustEmbedUnimplementedAuditServiceServer()
 }
 
@@ -66,6 +79,9 @@ type UnimplementedAuditServiceServer struct{}
 
 func (UnimplementedAuditServiceServer) GetLoginLogs(context.Context, *GetLoginLogsRequest) (*GetLoginLogsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetLoginLogs not implemented")
+}
+func (UnimplementedAuditServiceServer) GetOperationLogs(context.Context, *GetOperationLogsRequest) (*GetOperationLogsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetOperationLogs not implemented")
 }
 func (UnimplementedAuditServiceServer) mustEmbedUnimplementedAuditServiceServer() {}
 func (UnimplementedAuditServiceServer) testEmbeddedByValue()                      {}
@@ -106,6 +122,24 @@ func _AuditService_GetLoginLogs_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuditService_GetOperationLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOperationLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuditServiceServer).GetOperationLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuditService_GetOperationLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuditServiceServer).GetOperationLogs(ctx, req.(*GetOperationLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuditService_ServiceDesc is the grpc.ServiceDesc for AuditService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +150,10 @@ var AuditService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLoginLogs",
 			Handler:    _AuditService_GetLoginLogs_Handler,
+		},
+		{
+			MethodName: "GetOperationLogs",
+			Handler:    _AuditService_GetOperationLogs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

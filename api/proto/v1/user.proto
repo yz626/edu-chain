@@ -5,7 +5,7 @@ package api.proto.v1;
 option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
+import "common.proto";
 import "organization.proto";
 import "role.proto";
 
@@ -42,6 +42,15 @@ message UserDetail {
   Organization organization = 3; // 所属组织
 }
 
+// 用户列表项（用于列表响应）
+message UserListItem {
+  User user = 1;
+  repeated Role roles = 2;
+  Organization organization = 3;
+}
+
+// ==================== 请求消息 ====================
+
 // 注册请求
 message RegisterRequest {
   string username = 1;
@@ -53,12 +62,6 @@ message RegisterRequest {
   string role_id = 7; // 申请角色
 }
 
-// 注册响应
-message RegisterResponse {
-  string user_id = 1;
-  string message = 2;
-}
-
 // 登录请求
 message LoginRequest {
   string username = 1; // 用户名/邮箱/手机号
@@ -67,24 +70,9 @@ message LoginRequest {
   string captcha_id = 4; // 验证码ID（可选）
 }
 
-// 登录响应
-message LoginResponse {
-  string access_token = 1; // 访问令牌
-  string refresh_token = 2; // 刷新令牌
-  int64 expires_in = 3; // 过期时间（秒）
-  UserDetail user = 4; // 用户信息
-}
-
 // 刷新令牌请求
 message RefreshTokenRequest {
   string refresh_token = 1;
-}
-
-// 刷新令牌响应
-message RefreshTokenResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  int64 expires_in = 3;
 }
 
 // 登出请求
@@ -92,21 +80,28 @@ message LogoutRequest {
   string token = 1; // 需要撤销的令牌
 }
 
-// 获取当前用户信息
+// 获取当前用户信息请求
 message GetCurrentUserRequest {}
+
+// 获取用户请求
+message GetUserRequest {
+  string user_id = 1;
+}
 
 // 更新用户资料请求
 message UpdateProfileRequest {
-  string email = 1;
-  string phone = 2;
-  string real_name = 3;
-  string avatar = 4; // 头像URL
+  string user_id = 1;
+  string email = 2;
+  string phone = 3;
+  string real_name = 4;
+  string avatar = 5; // 头像URL
 }
 
 // 更新密码请求
 message UpdatePasswordRequest {
-  string old_password = 1;
-  string new_password = 2;
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
 }
 
 // 分页查询用户请求
@@ -119,12 +114,31 @@ message ListUsersRequest {
   UserStatus status = 6;
 }
 
+// 删除用户请求
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+// ==================== 响应消息 ====================
+
+// 注册响应
+message RegisterResponse {
+  string user_id = 1;
+  string message = 2;
+}
+
+// 登录响应
+message LoginResponse {
+  string access_token = 1; // 访问令牌
+  string refresh_token = 2; // 刷新令牌
+  int64 expires_in = 3; // 过期时间（秒）
+  UserDetail user = 4; // 用户信息
+}
+
 // 分页查询用户响应
 message ListUsersResponse {
-  repeated UserDetail users = 1;
-  int32 total = 2;
-  int32 page = 3;
-  int32 page_size = 4;
+  repeated UserListItem users = 1;
+  PageInfo pagination = 2;
 }
 
 // ==================== 服务定义 ====================
@@ -134,15 +148,15 @@ service UserService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (LoginResponse);
   
   // 用户管理
   rpc GetCurrentUser(GetCurrentUserRequest) returns (UserDetail);
+  rpc GetUser(GetUserRequest) returns (UserDetail);
   rpc UpdateProfile(UpdateProfileRequest) returns (User);
   rpc UpdatePassword(UpdatePasswordRequest) returns (google.protobuf.Empty);
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
   
   // 用户查询
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
-  rpc GetUser(GetCurrentUserRequest) returns (UserDetail);
-  rpc DeleteUser(GetCurrentUserRequest) returns (google.protobuf.Empty);
 }

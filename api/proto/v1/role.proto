@@ -5,6 +5,7 @@ package api.proto.v1;
 option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
 
 import "google/protobuf/empty.proto";
+import "common.proto";
 
 // ==================== 枚举定义 ====================
 
@@ -52,6 +53,8 @@ message UserRole {
   int64 expires_at = 5; // 过期时间（可选）
 }
 
+// ==================== 请求消息 ====================
+
 // 分配角色请求
 message AssignRoleRequest {
   string user_id = 1;
@@ -59,22 +62,64 @@ message AssignRoleRequest {
   int64 expires_at = 3; // 可选的过期时间
 }
 
+// 撤销角色请求
+message RevokeRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+}
+
 // 列出角色请求
 message ListRolesRequest {
   string organization_id = 1; // 可选，按组织筛选
+  string keyword = 2; // 关键词搜索
+  RoleType role_type = 3;
 }
+
+// 获取角色请求
+message GetRoleRequest {
+  string role_id = 1;
+}
+
+// 创建角色请求
+message CreateRoleRequest {
+  string name = 1;
+  string code = 2;
+  RoleType type = 3;
+  string description = 4;
+  string organization_id = 5;
+  repeated string permission_ids = 6;
+}
+
+// 更新角色请求
+message UpdateRoleRequest {
+  string role_id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permission_ids = 4;
+}
+
+// 删除角色请求
+message DeleteRoleRequest {
+  string role_id = 1;
+}
+
+// ==================== 响应消息 ====================
 
 // 列出角色响应
 message ListRolesResponse {
   repeated Role roles = 1;
+  PageInfo pagination = 2;
 }
 
 // ==================== 服务定义 ====================
 
-// 服务定义
 service RoleService {
   // 角色权限管理
   rpc AssignRole(AssignRoleRequest) returns (UserRole);
-  rpc RevokeRole(AssignRoleRequest) returns (google.protobuf.Empty);
+  rpc RevokeRole(RevokeRoleRequest) returns (google.protobuf.Empty);
   rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc GetRole(GetRoleRequest) returns (Role);
+  rpc CreateRole(CreateRoleRequest) returns (Role);
+  rpc UpdateRole(UpdateRoleRequest) returns (Role);
+  rpc DeleteRole(DeleteRoleRequest) returns (google.protobuf.Empty);
 }

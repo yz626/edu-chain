@@ -15,7 +15,8 @@ database:
   sslmode: disable      # SSL模式
   max_open_conns: 10    # 最大连接数
   max_idle_conns: 10    # 最大空闲连接数
-  timeout: 30           # 连接超时时间
+  max_lifetime: 30      # 连接最大生命周期 单位秒
+  timeout: 30           # 连接超时时间 单位秒
 
 # Redis配置
 redis:
@@ -34,5 +35,11 @@ logger:
   max_size: 100          # 单个日志文件最大大小(MB)
   max_age: 30            # 日志文件保留天数
   max_backups: 10        # 保留的日志文件数量
-  compress: true         # 是否压缩日志文件
   enable_stacktrace: false  # 是否启用堆栈跟踪
+
+# jwt 配置
+jwt:
+  secret: "edu-chain-secret-key-change-in-production"  # jwt密钥
+  expire: 3600       # 访问令牌过期时间 单位秒(1小时)
+  refresh_expire: 604800  # 刷新令牌过期时间 单位秒(7天)
+  issuer: "edu-chain"     # JWT签发者

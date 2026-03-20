@@ -1,8 +1,0 @@
-{"level":"info","time":"2026-03-20 01:45:08.998","caller":"logger/example_test.go:136","msg":"Info message","type":"system"}
-{"level":"warn","time":"2026-03-20 01:45:09.009","caller":"logger/example_test.go:137","msg":"Warn message","type":"system"}
-{"level":"error","time":"2026-03-20 01:45:09.009","caller":"logger/example_test.go:138","msg":"Error message","type":"system"}
-{"level":"info","time":"2026-03-20 01:45:09.009","caller":"logger/example_test.go:141","msg":"Test with fields","type":"system","key":"value","number":42,"flag":true}
-{"level":"info","time":"2026-03-20 01:45:09.011","caller":"logger/logger.go:450","msg":"Formatted: test, 123","type":"system"}
-{"level":"info","time":"2026-03-20 01:45:09.011","caller":"testing/testing.go:1792","msg":"Context log","type":"system","context":"value","type":"system","context":"value"}
-{"level":"info","time":"2026-03-20 01:45:09.015","caller":"logger/example_test.go:162","msg":"Context log","type":"system","request_id":"test_req_id"}
-{"level":"info","time":"2026-03-20 01:45:09.026","caller":"logger/example_test.go:167","msg":"Test timer","type":"system","duration_ms":10}

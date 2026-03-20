@@ -22,8 +22,9 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	OrganizationService_CreateOrganization_FullMethodName       = "/api.proto.v1.OrganizationService/CreateOrganization"
 	OrganizationService_UpdateOrganization_FullMethodName       = "/api.proto.v1.OrganizationService/UpdateOrganization"
-	OrganizationService_ListOrganizations_FullMethodName        = "/api.proto.v1.OrganizationService/ListOrganizations"
 	OrganizationService_GetOrganization_FullMethodName          = "/api.proto.v1.OrganizationService/GetOrganization"
+	OrganizationService_DeleteOrganization_FullMethodName       = "/api.proto.v1.OrganizationService/DeleteOrganization"
+	OrganizationService_ListOrganizations_FullMethodName        = "/api.proto.v1.OrganizationService/ListOrganizations"
 	OrganizationService_AddOrganizationMember_FullMethodName    = "/api.proto.v1.OrganizationService/AddOrganizationMember"
 	OrganizationService_RemoveOrganizationMember_FullMethodName = "/api.proto.v1.OrganizationService/RemoveOrganizationMember"
 	OrganizationService_GetOrganizationMembers_FullMethodName   = "/api.proto.v1.OrganizationService/GetOrganizationMembers"
@@ -36,11 +37,12 @@ type OrganizationServiceClient interface {
 	// 组织管理
 	CreateOrganization(ctx context.Context, in *CreateOrganizationRequest, opts ...grpc.CallOption) (*Organization, error)
 	UpdateOrganization(ctx context.Context, in *UpdateOrganizationRequest, opts ...grpc.CallOption) (*Organization, error)
-	ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error)
 	GetOrganization(ctx context.Context, in *GetOrganizationRequest, opts ...grpc.CallOption) (*Organization, error)
+	DeleteOrganization(ctx context.Context, in *DeleteOrganizationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error)
 	// 组织成员管理
 	AddOrganizationMember(ctx context.Context, in *AddOrganizationMemberRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	RemoveOrganizationMember(ctx context.Context, in *AddOrganizationMemberRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RemoveOrganizationMember(ctx context.Context, in *RemoveOrganizationMemberRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetOrganizationMembers(ctx context.Context, in *GetOrganizationMembersRequest, opts ...grpc.CallOption) (*GetOrganizationMembersResponse, error)
 }
 
@@ -72,20 +74,30 @@ func (c *organizationServiceClient) UpdateOrganization(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *organizationServiceClient) ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error) {
+func (c *organizationServiceClient) GetOrganization(ctx context.Context, in *GetOrganizationRequest, opts ...grpc.CallOption) (*Organization, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListOrganizationsResponse)
-	err := c.cc.Invoke(ctx, OrganizationService_ListOrganizations_FullMethodName, in, out, cOpts...)
+	out := new(Organization)
+	err := c.cc.Invoke(ctx, OrganizationService_GetOrganization_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *organizationServiceClient) GetOrganization(ctx context.Context, in *GetOrganizationRequest, opts ...grpc.CallOption) (*Organization, error) {
+func (c *organizationServiceClient) DeleteOrganization(ctx context.Context, in *DeleteOrganizationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Organization)
-	err := c.cc.Invoke(ctx, OrganizationService_GetOrganization_FullMethodName, in, out, cOpts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, OrganizationService_DeleteOrganization_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationServiceClient) ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListOrganizationsResponse)
+	err := c.cc.Invoke(ctx, OrganizationService_ListOrganizations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +114,7 @@ func (c *organizationServiceClient) AddOrganizationMember(ctx context.Context, i
 	return out, nil
 }
 
-func (c *organizationServiceClient) RemoveOrganizationMember(ctx context.Context, in *AddOrganizationMemberRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *organizationServiceClient) RemoveOrganizationMember(ctx context.Context, in *RemoveOrganizationMemberRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, OrganizationService_RemoveOrganizationMember_FullMethodName, in, out, cOpts...)
@@ -129,11 +141,12 @@ type OrganizationServiceServer interface {
 	// 组织管理
 	CreateOrganization(context.Context, *CreateOrganizationRequest) (*Organization, error)
 	UpdateOrganization(context.Context, *UpdateOrganizationRequest) (*Organization, error)
-	ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error)
 	GetOrganization(context.Context, *GetOrganizationRequest) (*Organization, error)
+	DeleteOrganization(context.Context, *DeleteOrganizationRequest) (*emptypb.Empty, error)
+	ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error)
 	// 组织成员管理
 	AddOrganizationMember(context.Context, *AddOrganizationMemberRequest) (*emptypb.Empty, error)
-	RemoveOrganizationMember(context.Context, *AddOrganizationMemberRequest) (*emptypb.Empty, error)
+	RemoveOrganizationMember(context.Context, *RemoveOrganizationMemberRequest) (*emptypb.Empty, error)
 	GetOrganizationMembers(context.Context, *GetOrganizationMembersRequest) (*GetOrganizationMembersResponse, error)
 	mustEmbedUnimplementedOrganizationServiceServer()
 }
@@ -151,16 +164,19 @@ func (UnimplementedOrganizationServiceServer) CreateOrganization(context.Context
 func (UnimplementedOrganizationServiceServer) UpdateOrganization(context.Context, *UpdateOrganizationRequest) (*Organization, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateOrganization not implemented")
 }
-func (UnimplementedOrganizationServiceServer) ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListOrganizations not implemented")
-}
 func (UnimplementedOrganizationServiceServer) GetOrganization(context.Context, *GetOrganizationRequest) (*Organization, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetOrganization not implemented")
+}
+func (UnimplementedOrganizationServiceServer) DeleteOrganization(context.Context, *DeleteOrganizationRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteOrganization not implemented")
+}
+func (UnimplementedOrganizationServiceServer) ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListOrganizations not implemented")
 }
 func (UnimplementedOrganizationServiceServer) AddOrganizationMember(context.Context, *AddOrganizationMemberRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddOrganizationMember not implemented")
 }
-func (UnimplementedOrganizationServiceServer) RemoveOrganizationMember(context.Context, *AddOrganizationMemberRequest) (*emptypb.Empty, error) {
+func (UnimplementedOrganizationServiceServer) RemoveOrganizationMember(context.Context, *RemoveOrganizationMemberRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method RemoveOrganizationMember not implemented")
 }
 func (UnimplementedOrganizationServiceServer) GetOrganizationMembers(context.Context, *GetOrganizationMembersRequest) (*GetOrganizationMembersResponse, error) {
@@ -223,24 +239,6 @@ func _OrganizationService_UpdateOrganization_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationService_ListOrganizations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListOrganizationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationServiceServer).ListOrganizations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OrganizationService_ListOrganizations_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationServiceServer).ListOrganizations(ctx, req.(*ListOrganizationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationService_GetOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetOrganizationRequest)
 	if err := dec(in); err != nil {
@@ -255,6 +253,42 @@ func _OrganizationService_GetOrganization_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationServiceServer).GetOrganization(ctx, req.(*GetOrganizationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationService_DeleteOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOrganizationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationServiceServer).DeleteOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrganizationService_DeleteOrganization_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationServiceServer).DeleteOrganization(ctx, req.(*DeleteOrganizationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationService_ListOrganizations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOrganizationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationServiceServer).ListOrganizations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrganizationService_ListOrganizations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationServiceServer).ListOrganizations(ctx, req.(*ListOrganizationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -278,7 +312,7 @@ func _OrganizationService_AddOrganizationMember_Handler(srv interface{}, ctx con
 }
 
 func _OrganizationService_RemoveOrganizationMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddOrganizationMemberRequest)
+	in := new(RemoveOrganizationMemberRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -290,7 +324,7 @@ func _OrganizationService_RemoveOrganizationMember_Handler(srv interface{}, ctx 
 		FullMethod: OrganizationService_RemoveOrganizationMember_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationServiceServer).RemoveOrganizationMember(ctx, req.(*AddOrganizationMemberRequest))
+		return srv.(OrganizationServiceServer).RemoveOrganizationMember(ctx, req.(*RemoveOrganizationMemberRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -329,12 +363,16 @@ var OrganizationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrganizationService_UpdateOrganization_Handler,
 		},
 		{
-			MethodName: "ListOrganizations",
-			Handler:    _OrganizationService_ListOrganizations_Handler,
-		},
-		{
 			MethodName: "GetOrganization",
 			Handler:    _OrganizationService_GetOrganization_Handler,
+		},
+		{
+			MethodName: "DeleteOrganization",
+			Handler:    _OrganizationService_DeleteOrganization_Handler,
+		},
+		{
+			MethodName: "ListOrganizations",
+			Handler:    _OrganizationService_ListOrganizations_Handler,
 		},
 		{
 			MethodName: "AddOrganizationMember",

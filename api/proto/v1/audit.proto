@@ -4,19 +4,37 @@ package api.proto.v1;
 
 option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
 
+import "common.proto";
+
 // ==================== 审计日志相关消息 ====================
 
 // 登录日志
 message LoginLog {
   string id = 1;
   string user_id = 2;
-  string ip = 3;
-  string user_agent = 4;
-  string location = 5; // 登录地点
-  bool success = 6;
-  string reason = 7; // 失败原因
-  int64 login_at = 8;
+  string username = 3;
+  string ip = 4;
+  string user_agent = 5;
+  string location = 6; // 登录地点
+  bool success = 7;
+  string reason = 8; // 失败原因
+  int64 login_at = 9;
 }
+
+// 操作日志
+message OperationLog {
+  string id = 1;
+  string user_id = 2;
+  string username = 3;
+  string action = 4; // 操作类型
+  string resource = 5; // 资源类型
+  string resource_id = 6; // 资源ID
+  string details = 7; // 操作详情
+  string ip = 8;
+  int64 created_at = 9;
+}
+
+// ==================== 请求消息 ====================
 
 // 获取登录日志请求
 message GetLoginLogsRequest {
@@ -25,12 +43,33 @@ message GetLoginLogsRequest {
   int64 end_time = 3;
   int32 page = 4;
   int32 page_size = 5;
+  bool success = 6; // 可选，按成功/失败筛选
 }
+
+// 获取操作日志请求
+message GetOperationLogsRequest {
+  string user_id = 1;
+  string action = 2;
+  string resource = 3;
+  string resource_id = 4;
+  int64 start_time = 5;
+  int64 end_time = 6;
+  int32 page = 7;
+  int32 page_size = 8;
+}
+
+// ==================== 响应消息 ====================
 
 // 获取登录日志响应
 message GetLoginLogsResponse {
   repeated LoginLog logs = 1;
-  int32 total = 2;
+  PageInfo pagination = 2;
+}
+
+// 获取操作日志响应
+message GetOperationLogsResponse {
+  repeated OperationLog logs = 1;
+  PageInfo pagination = 2;
 }
 
 // ==================== 服务定义 ====================
@@ -38,4 +77,5 @@ message GetLoginLogsResponse {
 service AuditService {
   // 审计日志
   rpc GetLoginLogs(GetLoginLogsRequest) returns (GetLoginLogsResponse);
+  rpc GetOperationLogs(GetOperationLogsRequest) returns (GetOperationLogsResponse);
 }

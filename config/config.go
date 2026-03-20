@@ -6,7 +6,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"github.com/yz626/edu-chain/pkg/logger"
 )
 
 // Config 应用配置
@@ -15,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 // ServerConfig 服务器配置
@@ -40,6 +40,7 @@ type DatabaseConfig struct {
 	SSLMode      string `mapstructure:"sslmode"`        // SSL模式
 	MaxOpenConns int    `mapstructure:"max_open_conns"` // 最大连接数
 	MaxIdleConns int    `mapstructure:"max_idle_conns"` // 最大空闲连接数
+	MaxLifetime  int    `mapstructure:"max_lifetime"`   // 连接超时时间
 	Timeout      int    `mapstructure:"timeout"`        // 连接超时时间
 }
 
@@ -70,32 +71,23 @@ type RedisConfig struct {
 
 // LoggerConfig 日志配置
 type LoggerConfig struct {
-	Level            string `mapstructure:"level"`
-	Format           string `mapstructure:"format"`
-	Directory        string `mapstructure:"directory"`
-	Console          bool   `mapstructure:"console"`
-	MaxSize          int    `mapstructure:"max_size"`
-	MaxAge           int    `mapstructure:"max_age"`
-	MaxBackups       int    `mapstructure:"max_backups"`
-	Compress         bool   `mapstructure:"compress"`
-	EnableStacktrace bool   `mapstructure:"enable_stacktrace"`
+	Level            string `mapstructure:"level"`             // 日志级别
+	Format           string `mapstructure:"format"`            // 日志格式
+	Directory        string `mapstructure:"directory"`         // 日志目录
+	Console          bool   `mapstructure:"console"`           // 是否输出到控制台
+	MaxSize          int    `mapstructure:"max_size"`          // 单个日志文件最大大小(MB)
+	MaxAge           int    `mapstructure:"max_age"`           // 日志文件保留天数
+	MaxBackups       int    `mapstructure:"max_backups"`       // 保留的日志文件数量
+	Compress         bool   `mapstructure:"compress"`          // 是否压缩旧日志
+	EnableStacktrace bool   `mapstructure:"enable_stacktrace"` // 是否启用堆栈跟踪
 }
 
-// ToLoggerConfig 转换为日志配置
-func (c *LoggerConfig) ToLoggerConfig() *logger.Config {
-	development := c.Level == "debug"
-	return &logger.Config{
-		Level:            c.Level,
-		Format:           c.Format,
-		Directory:        c.Directory,
-		Console:          c.Console,
-		Development:      development,
-		MaxSize:          c.MaxSize,
-		MaxAge:           c.MaxAge,
-		MaxBackups:       c.MaxBackups,
-		Compress:         c.Compress,
-		EnableStacktrace: c.EnableStacktrace,
-	}
+// JWTConfig JWT配置
+type JWTConfig struct {
+	Secret        string `mapstructure:"secret"`         // JWT密钥
+	Expire        int    `mapstructure:"expire"`         // 访问令牌过期时间（秒）
+	RefreshExpire int    `mapstructure:"refresh_expire"` // 刷新令牌过期时间（秒）
+	Issuer        string `mapstructure:"issuer"`         // JWT签发者
 }
 
 // Load 加载配置
@@ -160,4 +152,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("logger.max_backups", 10)
 	v.SetDefault("logger.compress", true)
 	v.SetDefault("logger.enable_stacktrace", false)
+
+	// JWT配置默认值
+	v.SetDefault("jwt.secret", "your-secret-key")
+	v.SetDefault("jwt.expire", 3600)           // 访问令牌1小时
+	v.SetDefault("jwt.refresh_expire", 604800) // 刷新令牌7天
+	v.SetDefault("jwt.issuer", "edu-chain")
 }

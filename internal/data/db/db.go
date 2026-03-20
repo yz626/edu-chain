@@ -48,7 +48,9 @@ func Init(cfg *config.Config) error {
 	// 设置最大打开连接数
 	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConns)
 	// 设置连接最大存活时间
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.Timeout) * time.Second)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.MaxLifetime) * time.Second)
+	// 设置连接超时时间
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Database.Timeout) * time.Second)
 
 	fmt.Println("Database connected successfully")
 	return nil

@@ -26,12 +26,13 @@ type LoginLog struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Ip            string                 `protobuf:"bytes,3,opt,name=ip,proto3" json:"ip,omitempty"`
-	UserAgent     string                 `protobuf:"bytes,4,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
-	Location      string                 `protobuf:"bytes,5,opt,name=location,proto3" json:"location,omitempty"` // 登录地点
-	Success       bool                   `protobuf:"varint,6,opt,name=success,proto3" json:"success,omitempty"`
-	Reason        string                 `protobuf:"bytes,7,opt,name=reason,proto3" json:"reason,omitempty"` // 失败原因
-	LoginAt       int64                  `protobuf:"varint,8,opt,name=login_at,json=loginAt,proto3" json:"login_at,omitempty"`
+	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Ip            string                 `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
+	UserAgent     string                 `protobuf:"bytes,5,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	Location      string                 `protobuf:"bytes,6,opt,name=location,proto3" json:"location,omitempty"` // 登录地点
+	Success       bool                   `protobuf:"varint,7,opt,name=success,proto3" json:"success,omitempty"`
+	Reason        string                 `protobuf:"bytes,8,opt,name=reason,proto3" json:"reason,omitempty"` // 失败原因
+	LoginAt       int64                  `protobuf:"varint,9,opt,name=login_at,json=loginAt,proto3" json:"login_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,6 +81,13 @@ func (x *LoginLog) GetUserId() string {
 	return ""
 }
 
+func (x *LoginLog) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
 func (x *LoginLog) GetIp() string {
 	if x != nil {
 		return x.Ip
@@ -122,6 +130,115 @@ func (x *LoginLog) GetLoginAt() int64 {
 	return 0
 }
 
+// 操作日志
+type OperationLog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Action        string                 `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`                           // 操作类型
+	Resource      string                 `protobuf:"bytes,5,opt,name=resource,proto3" json:"resource,omitempty"`                       // 资源类型
+	ResourceId    string                 `protobuf:"bytes,6,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 资源ID
+	Details       string                 `protobuf:"bytes,7,opt,name=details,proto3" json:"details,omitempty"`                         // 操作详情
+	Ip            string                 `protobuf:"bytes,8,opt,name=ip,proto3" json:"ip,omitempty"`
+	CreatedAt     int64                  `protobuf:"varint,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OperationLog) Reset() {
+	*x = OperationLog{}
+	mi := &file_audit_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OperationLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OperationLog) ProtoMessage() {}
+
+func (x *OperationLog) ProtoReflect() protoreflect.Message {
+	mi := &file_audit_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OperationLog.ProtoReflect.Descriptor instead.
+func (*OperationLog) Descriptor() ([]byte, []int) {
+	return file_audit_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *OperationLog) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *OperationLog) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *OperationLog) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *OperationLog) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *OperationLog) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *OperationLog) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+func (x *OperationLog) GetDetails() string {
+	if x != nil {
+		return x.Details
+	}
+	return ""
+}
+
+func (x *OperationLog) GetIp() string {
+	if x != nil {
+		return x.Ip
+	}
+	return ""
+}
+
+func (x *OperationLog) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
 // 获取登录日志请求
 type GetLoginLogsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -130,13 +247,14 @@ type GetLoginLogsRequest struct {
 	EndTime       int64                  `protobuf:"varint,3,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	Page          int32                  `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      int32                  `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	Success       bool                   `protobuf:"varint,6,opt,name=success,proto3" json:"success,omitempty"` // 可选，按成功/失败筛选
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetLoginLogsRequest) Reset() {
 	*x = GetLoginLogsRequest{}
-	mi := &file_audit_proto_msgTypes[1]
+	mi := &file_audit_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -148,7 +266,7 @@ func (x *GetLoginLogsRequest) String() string {
 func (*GetLoginLogsRequest) ProtoMessage() {}
 
 func (x *GetLoginLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_audit_proto_msgTypes[1]
+	mi := &file_audit_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,7 +279,7 @@ func (x *GetLoginLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLoginLogsRequest.ProtoReflect.Descriptor instead.
 func (*GetLoginLogsRequest) Descriptor() ([]byte, []int) {
-	return file_audit_proto_rawDescGZIP(), []int{1}
+	return file_audit_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetLoginLogsRequest) GetUserId() string {
@@ -199,18 +317,126 @@ func (x *GetLoginLogsRequest) GetPageSize() int32 {
 	return 0
 }
 
+func (x *GetLoginLogsRequest) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+// 获取操作日志请求
+type GetOperationLogsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Action        string                 `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	Resource      string                 `protobuf:"bytes,3,opt,name=resource,proto3" json:"resource,omitempty"`
+	ResourceId    string                 `protobuf:"bytes,4,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	StartTime     int64                  `protobuf:"varint,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       int64                  `protobuf:"varint,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Page          int32                  `protobuf:"varint,7,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,8,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOperationLogsRequest) Reset() {
+	*x = GetOperationLogsRequest{}
+	mi := &file_audit_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOperationLogsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOperationLogsRequest) ProtoMessage() {}
+
+func (x *GetOperationLogsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_audit_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOperationLogsRequest.ProtoReflect.Descriptor instead.
+func (*GetOperationLogsRequest) Descriptor() ([]byte, []int) {
+	return file_audit_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetOperationLogsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetOperationLogsRequest) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *GetOperationLogsRequest) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *GetOperationLogsRequest) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+func (x *GetOperationLogsRequest) GetStartTime() int64 {
+	if x != nil {
+		return x.StartTime
+	}
+	return 0
+}
+
+func (x *GetOperationLogsRequest) GetEndTime() int64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+func (x *GetOperationLogsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetOperationLogsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
 // 获取登录日志响应
 type GetLoginLogsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Logs          []*LoginLog            `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
-	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Pagination    *PageInfo              `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetLoginLogsResponse) Reset() {
 	*x = GetLoginLogsResponse{}
-	mi := &file_audit_proto_msgTypes[2]
+	mi := &file_audit_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -222,7 +448,7 @@ func (x *GetLoginLogsResponse) String() string {
 func (*GetLoginLogsResponse) ProtoMessage() {}
 
 func (x *GetLoginLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_audit_proto_msgTypes[2]
+	mi := &file_audit_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -235,7 +461,7 @@ func (x *GetLoginLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLoginLogsResponse.ProtoReflect.Descriptor instead.
 func (*GetLoginLogsResponse) Descriptor() ([]byte, []int) {
-	return file_audit_proto_rawDescGZIP(), []int{2}
+	return file_audit_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetLoginLogsResponse) GetLogs() []*LoginLog {
@@ -245,40 +471,126 @@ func (x *GetLoginLogsResponse) GetLogs() []*LoginLog {
 	return nil
 }
 
-func (x *GetLoginLogsResponse) GetTotal() int32 {
+func (x *GetLoginLogsResponse) GetPagination() *PageInfo {
 	if x != nil {
-		return x.Total
+		return x.Pagination
 	}
-	return 0
+	return nil
+}
+
+// 获取操作日志响应
+type GetOperationLogsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Logs          []*OperationLog        `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
+	Pagination    *PageInfo              `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOperationLogsResponse) Reset() {
+	*x = GetOperationLogsResponse{}
+	mi := &file_audit_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOperationLogsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOperationLogsResponse) ProtoMessage() {}
+
+func (x *GetOperationLogsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_audit_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOperationLogsResponse.ProtoReflect.Descriptor instead.
+func (*GetOperationLogsResponse) Descriptor() ([]byte, []int) {
+	return file_audit_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetOperationLogsResponse) GetLogs() []*OperationLog {
+	if x != nil {
+		return x.Logs
+	}
+	return nil
+}
+
+func (x *GetOperationLogsResponse) GetPagination() *PageInfo {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
 }
 
 var File_audit_proto protoreflect.FileDescriptor
 
 const file_audit_proto_rawDesc = "" +
 	"\n" +
-	"\vaudit.proto\x12\fapi.proto.v1\"\xcb\x01\n" +
+	"\vaudit.proto\x12\fapi.proto.v1\x1a\fcommon.proto\"\xe7\x01\n" +
 	"\bLoginLog\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x0e\n" +
-	"\x02ip\x18\x03 \x01(\tR\x02ip\x12\x1d\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1a\n" +
+	"\busername\x18\x03 \x01(\tR\busername\x12\x0e\n" +
+	"\x02ip\x18\x04 \x01(\tR\x02ip\x12\x1d\n" +
 	"\n" +
-	"user_agent\x18\x04 \x01(\tR\tuserAgent\x12\x1a\n" +
-	"\blocation\x18\x05 \x01(\tR\blocation\x12\x18\n" +
-	"\asuccess\x18\x06 \x01(\bR\asuccess\x12\x16\n" +
-	"\x06reason\x18\a \x01(\tR\x06reason\x12\x19\n" +
-	"\blogin_at\x18\b \x01(\x03R\aloginAt\"\x99\x01\n" +
+	"user_agent\x18\x05 \x01(\tR\tuserAgent\x12\x1a\n" +
+	"\blocation\x18\x06 \x01(\tR\blocation\x12\x18\n" +
+	"\asuccess\x18\a \x01(\bR\asuccess\x12\x16\n" +
+	"\x06reason\x18\b \x01(\tR\x06reason\x12\x19\n" +
+	"\blogin_at\x18\t \x01(\x03R\aloginAt\"\xf1\x01\n" +
+	"\fOperationLog\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1a\n" +
+	"\busername\x18\x03 \x01(\tR\busername\x12\x16\n" +
+	"\x06action\x18\x04 \x01(\tR\x06action\x12\x1a\n" +
+	"\bresource\x18\x05 \x01(\tR\bresource\x12\x1f\n" +
+	"\vresource_id\x18\x06 \x01(\tR\n" +
+	"resourceId\x12\x18\n" +
+	"\adetails\x18\a \x01(\tR\adetails\x12\x0e\n" +
+	"\x02ip\x18\b \x01(\tR\x02ip\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\t \x01(\x03R\tcreatedAt\"\xb3\x01\n" +
 	"\x13GetLoginLogsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x02 \x01(\x03R\tstartTime\x12\x19\n" +
 	"\bend_time\x18\x03 \x01(\x03R\aendTime\x12\x12\n" +
 	"\x04page\x18\x04 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x05 \x01(\x05R\bpageSize\"X\n" +
+	"\tpage_size\x18\x05 \x01(\x05R\bpageSize\x12\x18\n" +
+	"\asuccess\x18\x06 \x01(\bR\asuccess\"\xf2\x01\n" +
+	"\x17GetOperationLogsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
+	"\x06action\x18\x02 \x01(\tR\x06action\x12\x1a\n" +
+	"\bresource\x18\x03 \x01(\tR\bresource\x12\x1f\n" +
+	"\vresource_id\x18\x04 \x01(\tR\n" +
+	"resourceId\x12\x1d\n" +
+	"\n" +
+	"start_time\x18\x05 \x01(\x03R\tstartTime\x12\x19\n" +
+	"\bend_time\x18\x06 \x01(\x03R\aendTime\x12\x12\n" +
+	"\x04page\x18\a \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\b \x01(\x05R\bpageSize\"z\n" +
 	"\x14GetLoginLogsResponse\x12*\n" +
-	"\x04logs\x18\x01 \x03(\v2\x16.api.proto.v1.LoginLogR\x04logs\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total2e\n" +
+	"\x04logs\x18\x01 \x03(\v2\x16.api.proto.v1.LoginLogR\x04logs\x126\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x16.api.proto.v1.PageInfoR\n" +
+	"pagination\"\x82\x01\n" +
+	"\x18GetOperationLogsResponse\x12.\n" +
+	"\x04logs\x18\x01 \x03(\v2\x1a.api.proto.v1.OperationLogR\x04logs\x126\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x16.api.proto.v1.PageInfoR\n" +
+	"pagination2\xc8\x01\n" +
 	"\fAuditService\x12U\n" +
-	"\fGetLoginLogs\x12!.api.proto.v1.GetLoginLogsRequest\x1a\".api.proto.v1.GetLoginLogsResponseB,Z*github.com/yz627/edu-chain/api/proto/v1;v1b\x06proto3"
+	"\fGetLoginLogs\x12!.api.proto.v1.GetLoginLogsRequest\x1a\".api.proto.v1.GetLoginLogsResponse\x12a\n" +
+	"\x10GetOperationLogs\x12%.api.proto.v1.GetOperationLogsRequest\x1a&.api.proto.v1.GetOperationLogsResponseB,Z*github.com/yz627/edu-chain/api/proto/v1;v1b\x06proto3"
 
 var (
 	file_audit_proto_rawDescOnce sync.Once
@@ -292,21 +604,30 @@ func file_audit_proto_rawDescGZIP() []byte {
 	return file_audit_proto_rawDescData
 }
 
-var file_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_audit_proto_goTypes = []any{
-	(*LoginLog)(nil),             // 0: api.proto.v1.LoginLog
-	(*GetLoginLogsRequest)(nil),  // 1: api.proto.v1.GetLoginLogsRequest
-	(*GetLoginLogsResponse)(nil), // 2: api.proto.v1.GetLoginLogsResponse
+	(*LoginLog)(nil),                 // 0: api.proto.v1.LoginLog
+	(*OperationLog)(nil),             // 1: api.proto.v1.OperationLog
+	(*GetLoginLogsRequest)(nil),      // 2: api.proto.v1.GetLoginLogsRequest
+	(*GetOperationLogsRequest)(nil),  // 3: api.proto.v1.GetOperationLogsRequest
+	(*GetLoginLogsResponse)(nil),     // 4: api.proto.v1.GetLoginLogsResponse
+	(*GetOperationLogsResponse)(nil), // 5: api.proto.v1.GetOperationLogsResponse
+	(*PageInfo)(nil),                 // 6: api.proto.v1.PageInfo
 }
 var file_audit_proto_depIdxs = []int32{
 	0, // 0: api.proto.v1.GetLoginLogsResponse.logs:type_name -> api.proto.v1.LoginLog
-	1, // 1: api.proto.v1.AuditService.GetLoginLogs:input_type -> api.proto.v1.GetLoginLogsRequest
-	2, // 2: api.proto.v1.AuditService.GetLoginLogs:output_type -> api.proto.v1.GetLoginLogsResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	6, // 1: api.proto.v1.GetLoginLogsResponse.pagination:type_name -> api.proto.v1.PageInfo
+	1, // 2: api.proto.v1.GetOperationLogsResponse.logs:type_name -> api.proto.v1.OperationLog
+	6, // 3: api.proto.v1.GetOperationLogsResponse.pagination:type_name -> api.proto.v1.PageInfo
+	2, // 4: api.proto.v1.AuditService.GetLoginLogs:input_type -> api.proto.v1.GetLoginLogsRequest
+	3, // 5: api.proto.v1.AuditService.GetOperationLogs:input_type -> api.proto.v1.GetOperationLogsRequest
+	4, // 6: api.proto.v1.AuditService.GetLoginLogs:output_type -> api.proto.v1.GetLoginLogsResponse
+	5, // 7: api.proto.v1.AuditService.GetOperationLogs:output_type -> api.proto.v1.GetOperationLogsResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_audit_proto_init() }
@@ -314,13 +635,14 @@ func file_audit_proto_init() {
 	if File_audit_proto != nil {
 		return
 	}
+	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_proto_rawDesc), len(file_audit_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

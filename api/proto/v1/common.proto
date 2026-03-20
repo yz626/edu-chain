@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/yz627/edu-chain/api/proto/v1;v1";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+// ==================== 统一响应状态码 ====================
+
+// 统一响应状态码
+enum Code {
+  CODE_UNSPECIFIED = 0;
+  CODE_SUCCESS = 200; // 成功
+  CODE_BAD_REQUEST = 400; // 请求参数错误
+  CODE_UNAUTHORIZED = 401; // 未认证
+  CODE_FORBIDDEN = 403; // 无权限
+  CODE_NOT_FOUND = 404; // 资源不存在
+  CODE_CONFLICT = 409; // 资源冲突
+  CODE_TOO_MANY_REQUESTS = 429; // 请求过多
+  CODE_INTERNAL_ERROR = 500; // 服务器内部错误
+  CODE_SERVICE_UNAVAILABLE = 503; // 服务不可用
+}
+
+// ==================== 通用消息定义 ====================
+
+// 分页信息
+message PageInfo {
+  int32 page = 1; // 当前页码
+  int32 page_size = 2; // 每页数量
+  int32 total = 3; // 总记录数
+  int32 total_pages = 4; // 总页数
+}
+
+// 排序信息
+message SortInfo {
+  string field = 1; // 排序字段
+  bool ascending = 2; // 是否升序
+}
+
+// ==================== 统一响应结构 ====================
+
+// 统一响应（用于无分页的简单响应）
+message Response {
+  Code code = 1; // 状态码
+  string message = 2; // 状态消息
+  string trace_id = 3; // 请求追踪ID
+  google.protobuf.Timestamp timestamp = 4; // 时间戳
+  google.protobuf.Any data = 5; // 业务数据
+}
+
+// 带数据的成功响应
+message DataResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Any data = 5;
+}
+
+// 空响应（用于不需要返回数据的操作）
+message EmptyResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+// ==================== 列表响应结构 ====================
+
+// 通用列表响应
+message ListResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  repeated google.protobuf.Any items = 5; // 数据列表
+  PageInfo pagination = 6; // 分页信息
+}
+
+// 带总数列表响应
+message ListWithTotalResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  repeated google.protobuf.Any items = 5;
+  int32 total = 6;
+}
+
+// ==================== 错误详情 ====================
+
+// 错误详情
+message ErrorDetail {
+  string field = 1; // 错误字段
+  string message = 2; // 错误消息
+  string code = 3; // 错误代码
+}
+
+// 错误响应
+message ErrorResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  repeated ErrorDetail details = 5; // 详细错误信息
+}
+
+// ==================== ID响应 ====================
+
+// ID响应（用于创建资源后返回ID）
+message IDResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string id = 5; // 创建的资源ID
+}
+
+// ==================== 布尔响应 ====================
+
+// 布尔响应（用于验证等操作）
+message BoolResponse {
+  Code code = 1;
+  string message = 2;
+  string trace_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  bool result = 5; // 布尔结果
+}
