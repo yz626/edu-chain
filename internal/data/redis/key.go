@@ -1,4 +1,4 @@
-package cache
+package redis
 
 // 缓存Key前缀管理常量
 // 用于区分不同业务模块的缓存key，避免key冲突

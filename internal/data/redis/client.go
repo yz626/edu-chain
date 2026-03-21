@@ -1,15 +1,18 @@
-package cache
+package redis
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/yz626/edu-chain/config"
 	"github.com/yz626/edu-chain/pkg/logger"
 )
+
+var ProviderSet = wire.NewSet(NewRedisClient, NewRedisClientFromViper)
 
 var (
 	// DefaultExpiration 默认过期时间
@@ -21,11 +24,11 @@ var (
 // RedisClient Redis客户端
 type RedisClient struct {
 	client *redis.Client
-	log    logger.Logger
+	log    *logger.Logger
 }
 
 // NewRedisClient 创建Redis客户端
-func NewRedisClient(cfg *config.RedisConfig, hepler logger.Logger) (*RedisClient, error) {
+func NewRedisClient(cfg *config.RedisConfig, hepler *logger.Logger) (*RedisClient, error) {
 	log := hepler.Named(DefaultLoggerPrefix)
 
 	client := redis.NewClient(&redis.Options{
@@ -48,12 +51,12 @@ func NewRedisClient(cfg *config.RedisConfig, hepler logger.Logger) (*RedisClient
 
 	return &RedisClient{
 		client: client,
-		log:    *log,
+		log:    log,
 	}, nil
 }
 
 // NewRedisClientFromViper 从Viper创建Redis客户端
-func NewRedisClientFromViper(v *config.Config, hepler logger.Logger) (*RedisClient, error) {
+func NewRedisClientFromViper(v *config.Config, hepler *logger.Logger) (*RedisClient, error) {
 	return NewRedisClient(&v.Redis, hepler)
 }
 

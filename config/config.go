@@ -16,6 +16,7 @@ var (
 // Config 应用配置
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
+	GRPC     GRPCConfig     `mapstructure:"grpc"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
@@ -24,9 +25,17 @@ type Config struct {
 
 // ServerConfig 服务器配置
 type ServerConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Host         string `mapstructure:"host"`          // 服务器地址
+	Port         int    `mapstructure:"port"`          // 服务器端口
+	Mode         string `mapstructure:"mode"`          // 运行模式 (debug, release)
+	ReadTimeout  int    `mapstructure:"read_timeout"`  // 读取超时(秒)
+	WriteTimeout int    `mapstructure:"write_timeout"` // 写入超时(秒)
+}
+
+// GRPCConfig gRPC服务器配置
+type GRPCConfig struct {
+	Host string `mapstructure:"host"` // gRPC服务器地址
+	Port int    `mapstructure:"port"` // gRPC服务器端口
 }
 
 // Addr 获取服务器地址
@@ -145,6 +154,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.host", "0.0.0.0")
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.mode", "debug")
+	v.SetDefault("server.read_timeout", 30)  // 读取超时30秒
+	v.SetDefault("server.write_timeout", 30) // 写入超时30秒
+
+	v.SetDefault("grpc.host", "0.0.0.0")
+	v.SetDefault("grpc.port", 9090)
 
 	v.SetDefault("database.name", "mysql")
 	v.SetDefault("database.host", "localhost")

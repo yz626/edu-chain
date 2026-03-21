@@ -6,11 +6,15 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/google/wire"
+	"github.com/yz626/edu-chain/config"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+var ProviderSet = wire.NewSet(NewLogger)
 
 var (
 	// globalLogger 全局日志实例
@@ -24,13 +28,16 @@ type Logger struct {
 	*zap.Logger
 }
 
-// Init 初始化全局日志
-func Init(cfg *Config) error {
-	var err error
+// NewLogger 初始化全局日志
+func NewLogger(cfg *config.Config) (*Logger, error) {
 	once.Do(func() {
-		globalLogger, err = newLogger(cfg)
+		logger, err := newLogger(FromConfig(&cfg.Logger))
+		if err != nil {
+			return
+		}
+		globalLogger = logger
 	})
-	return err
+	return &Logger{globalLogger}, nil
 }
 
 // newLogger 创建新的日志实例
@@ -106,12 +113,7 @@ func newLogger(cfg *Config) (*zap.Logger, error) {
 // GetLogger 获取全局日志实例
 func GetLogger() *Logger {
 	if globalLogger == nil {
-		// 如果未初始化，使用默认配置
-		cfg := DefaultConfig()
-		if err := Init(cfg); err != nil {
-			// 如果初始化失败，使用zap的默认日志
-			globalLogger, _ = zap.NewProduction()
-		}
+		globalLogger, _ = newLogger(DefaultConfig())
 	}
 	return &Logger{globalLogger}
 }
