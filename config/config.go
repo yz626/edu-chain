@@ -8,6 +8,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	// ConfigPath 配置文件路径
+	ConfigPath = "config/config.yaml"
+)
+
 // Config 应用配置
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
@@ -91,16 +96,26 @@ type JWTConfig struct {
 }
 
 // Load 加载配置
-func Load() (*Config, error) {
+func Load(path ...string) (*Config, error) {
+	if len(path) > 1 {
+		return nil, fmt.Errorf("too many config paths")
+	}
+
 	v := viper.New()
 	setDefaults(v)
 	v.AutomaticEnv()
 
-	// 配置文件路径
+	// 配置文件路径，先尝试读取环境变量中的配置文件路径
+	// 如果未设置，尝试使用传入的参数
+	// 如果未设置，使用默认配置文件路径
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		// 默认配置文件路径 (相对于项目根目录)
-		configPath = "config/config.yaml"
+		if len(path) > 0 {
+			configPath = path[0]
+		} else {
+			configPath = ConfigPath
+		}
+
 	}
 
 	v.SetConfigFile(configPath)
