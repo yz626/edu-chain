@@ -7,7 +7,6 @@ import (
 	"github.com/yz626/edu-chain/internal/data/db"
 	"github.com/yz626/edu-chain/internal/data/redis"
 	"github.com/yz626/edu-chain/pkg/logger"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -24,7 +23,7 @@ func main() {
 	}
 
 	// 初始化数据库连接
-	DB, err := db.NewDB(&cfg.Database)
+	DB, err := db.NewDB(&cfg.Database, logger)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -38,7 +37,7 @@ func main() {
 	testMain(DB, redisClient)
 }
 
-func testMain(DB *gorm.DB, redis *redis.RedisClient) {
+func testMain(DB *db.DateDB, redis *redis.RedisClient) {
 	fn, err := db.NewDBCloser(DB)
 	if err != nil {
 		logger.GetLogger().Named("数据库").Error("创建数据库关闭函数失败", logger.String("err", err.Error()))

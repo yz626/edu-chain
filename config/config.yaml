@@ -50,3 +50,7 @@ jwt:
   expire: 3600       # 访问令牌过期时间 单位秒(1小时)
   refresh_expire: 604800  # 刷新令牌过期时间 单位秒(7天)
   issuer: "edu-chain"     # JWT签发者
+
+blockchain:
+  name: "fiscobcos"
+  

@@ -6,10 +6,11 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	glogger "gorm.io/gorm/logger"
 
 	"github.com/google/wire"
 	"github.com/yz626/edu-chain/config"
+	"github.com/yz626/edu-chain/pkg/logger"
 )
 
 // ProviderSet 是 Wire 的 Provider 集合
@@ -25,17 +26,24 @@ var ProviderSet = wire.NewSet(NewDB, NewDBCloser)
 
 var (
 	// DB 全局数据库连接
-	DB *gorm.DB
+	globalDB *gorm.DB
 )
 
+type DateDB struct {
+	DB  *gorm.DB
+	cfg *config.DatabaseConfig
+	log *logger.Logger
+}
+
 // NewDB 创建数据库连接
-func NewDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
+func NewDB(cfg *config.DatabaseConfig, log *logger.Logger) (*DateDB, error) {
 	var err error
+	log = log.Named("db")
 
 	// 连接数据库
 	dsn := cfg.MySQLDSN()
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: glogger.Default.LogMode(glogger.Info),
 		NowFunc: func() time.Time {
 			return time.Now().Local()
 		},
@@ -60,35 +68,40 @@ func NewDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	// 设置连接超时时间
 	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Timeout) * time.Second)
 
-	fmt.Println("Database connected successfully")
-	return database, nil
+	log.With(logger.String("moudel", "data/db")).Info("数据库连接成功")
+	return &DateDB{
+		DB:  database,
+		cfg: cfg,
+		log: log,
+	}, nil
 }
 
 // NewDBCloser 创建数据库关闭函数
-func NewDBCloser(db *gorm.DB) (func() error, error) {
+func NewDBCloser(db *DateDB) (func() error, error) {
 	return func() error {
-		sqlDB, err := db.DB()
+		sqlDB, err := db.DB.DB()
 		if err != nil {
 			return err
 		}
+		db.log.With(logger.String("moudel", "data/db")).Info("关闭数据库连接")
 		return sqlDB.Close()
 	}, nil
 }
 
 // Init 初始化全局数据库连接（保留向后兼容）
 func Init(cfg *config.DatabaseConfig) error {
-	db, err := NewDB(cfg)
+	db, err := NewDB(cfg, logger.GetLogger())
 	if err != nil {
 		return err
 	}
-	DB = db
+	globalDB = db.DB
 	return nil
 }
 
 // Close 关闭数据库连接
 func Close() error {
-	if DB != nil {
-		sqlDB, err := DB.DB()
+	if globalDB != nil {
+		sqlDB, err := globalDB.DB()
 		if err != nil {
 			return err
 		}
@@ -98,6 +111,14 @@ func Close() error {
 }
 
 // GetDB 获取数据库连接实例
-func GetDB() *gorm.DB {
-	return DB
+func GetDB() *DateDB {
+	return &DateDB{
+		DB:  globalDB,
+		cfg: nil,
+		log: logger.GetLogger().Named("globalDB"),
+	}
+}
+
+func (*DateDB) GetGormDB() *gorm.DB {
+	return globalDB
 }

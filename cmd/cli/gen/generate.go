@@ -34,7 +34,7 @@ func main() {
 	})
 
 	// 设置目标 db
-	g.UseDB(db.GetDB())
+	g.UseDB(db.GetDB().GetGormDB())
 
 	// 生成所有表（使用默认类型映射）
 	// GORM Gen 会将 JSON 类型映射为 string，这是正常行为

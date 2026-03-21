@@ -1,0 +1,6 @@
+{"level":"info","time":"2026-03-21 23:56:19","logger":"redis","caller":"server/main.go:33","msg":"Redis连接成功","addr":"localhost:6379"}
+{"level":"info","time":"2026-03-21 23:56:19","logger":"redis","caller":"server/main.go:48","msg":"关闭Redis连接"}
+{"level":"info","time":"2026-03-22 00:11:19","logger":"db","caller":"server/main.go:26","msg":"数据库连接成功","moudel":"data/db"}
+{"level":"info","time":"2026-03-22 00:11:19","logger":"redis","caller":"server/main.go:32","msg":"Redis连接成功","addr":"localhost:6379"}
+{"level":"info","time":"2026-03-22 00:11:19","logger":"redis","caller":"server/main.go:47","msg":"关闭Redis连接"}
+{"level":"info","time":"2026-03-22 00:11:19","logger":"db","caller":"server/main.go:51","msg":"关闭数据库连接","moudel":"data/db"}

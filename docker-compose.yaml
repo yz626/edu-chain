@@ -1,37 +1,71 @@
-# MySQL Docker Compose 配置
-# 用于 edu-chain 项目的MySQL数据库
+# ===========================================
+# edu-chain Docker Compose 配置
+# ===========================================
 
 services:
+  # MySQL 数据库服务
   mysql:
     image: mysql:8.0
     container_name: edu-chain-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: 123456      # root密码
-      MYSQL_DATABASE: edu_chain        # 数据库名称
-      MYSQL_USER: edu_chain            # 普通用户（可选）
-      MYSQL_PASSWORD: edu_chain123     # 普通用户密码（可选）
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: edu_chain
+      MYSQL_USER: edu_chain
+      MYSQL_PASSWORD: "edu_chain123"
       TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       # 持久化MySQL数据
       - mysql_data:/var/lib/mysql
+      # 初始化SQL脚本
+      - ./sql/migrations:/docker-entrypoint-initdb.d
     command:
-      # MySQL配置参数
       - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-storage-engine=INNODB
       - --max_connections=200
       - --lower_case_table_names=1
+    networks:
+      - edu-chain-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
+  # Redis 缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: edu-chain-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "6379:6379"
+    volumes:
+      # 持久化Redis数据
+      - redis_data:/data
+    networks:
+      - edu-chain-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# 网络配置
+networks:
+  edu-chain-network:
+    driver: bridge
+
+# 卷配置
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
     driver: local

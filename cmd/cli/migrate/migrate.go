@@ -51,7 +51,7 @@ func runMigration() {
 	fmt.Println("Starting database migration...")
 
 	// 自动迁移所有模型
-	err := db.GetDB().AutoMigrate(
+	err := db.GetDB().GetGormDB().AutoMigrate(
 		// 用户与权限模块
 		&models.User{},
 		&models.Role{},
