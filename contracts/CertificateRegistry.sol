@@ -30,14 +30,14 @@ contract CertificateRegistry {
     
     // 存储证书的映射 - 使用单独的映射存储每个字段以避免栈溢出
     // key: 证书ID
-    mapping(string => string) private certStudentIds;
-    mapping(string => string) private certStudentNames;
-    mapping(string => string) private certCourseNames;
-    mapping(string => string) private certCourseScores;
-    mapping(string => string) private certIssuers;
-    mapping(string => uint256) private certIssueDates;
-    mapping(string => bool) private certRevoked;
-    mapping(string => string) private certRevokeReasons;
+    mapping(string => string) private certStudentIds;   // 学生ID
+    mapping(string => string) private certStudentNames; // 学生姓名
+    mapping(string => string) private certCourseNames;  // 课程名称
+    mapping(string => string) private certCourseScores; // 课程成绩
+    mapping(string => string) private certIssuers; // 签发者
+    mapping(string => uint256) private certIssueDates; // 签发时间
+    mapping(string => bool) private certRevoked; // 是否吊销
+    mapping(string => string) private certRevokeReasons; // 吊销原因
     
     // 地址到机构名称的映射
     // key: 区块链地址

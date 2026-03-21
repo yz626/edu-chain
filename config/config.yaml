@@ -31,7 +31,7 @@ redis:
   port: 6379        # Redis服务端口
   password: ""      # Redis密码
   db: 0             # Redis数据库索引
-  pool_size: 10     # 连接池大小
+  pool_size: 10    # 连接池大小
 
 # 日志配置
 logger:
@@ -39,9 +39,9 @@ logger:
   format: json           # 日志格式 (json, console)
   directory: logs        # 日志目录
   console: true          # 是否输出到控制台
-  max_size: 100          # 单个日志文件最大大小(MB)
-  max_age: 30            # 日志文件保留天数
-  max_backups: 10        # 保留的日志文件数量
+  max_size: 100         # 单个日志文件最大大小(MB)
+  max_age: 30           # 日志文件保留天数
+  max_backups: 10       # 保留的日志文件数量
   enable_stacktrace: false  # 是否启用堆栈跟踪
 
 # jwt 配置
@@ -51,6 +51,37 @@ jwt:
   refresh_expire: 604800  # 刷新令牌过期时间 单位秒(7天)
   issuer: "edu-chain"     # JWT签发者
 
+# 区块链配置
 blockchain:
-  name: "fiscobcos"
+  enabled: true                    # 是否启用区块链
+  type: "fiscobcos"               # 区块链类型: fiscobcos, ethereum, fabric
   
+  fiscobcos:
+    # 节点连接
+    node_url: "http://127.0.0.1:8545"   # RPC节点URL
+    group_id: "1"                        # 群组ID
+    chain_id: 1                          # 链ID
+    
+    # 账户配置(私钥和私钥文件二选一)
+    account_key: ""                       # 十六进制私钥
+    account_key_file: ""                  # 私钥文件路径
+    
+    # 合约配置
+    contract_address: ""                  # 部署后的合约地址
+    contract_abi: ""                      # 合约ABI JSON
+    contract_abi_path: ""                 # 合约ABI文件路径
+    
+    # 连接配置
+    timeout: 30s                          # 请求超时
+    max_retries: 3                        # 最大重试次数
+    confirm_timeout: 60s                  # 交易确认超时
+    gas_limit: 3000000                    # Gas限制
+    
+    # 国密配置(可选)
+    # gm_enable: false
+    # gm_account_key: ""
+    # gm_account_key_file: ""
+    # gm_account_cert: "./certs/gm-node.crt"
+    # gm_ssl_ca: "./certs/gmca.crt"
+    # gm_ssl_cert: "./certs/gmnode.crt"
+    # gm_ssl_key: "./certs/gmnode.key"

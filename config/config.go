@@ -2,16 +2,18 @@ package config
 
 import (
 	"fmt"
+	"time"
 )
 
 // Config 应用配置
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	GRPC     GRPCConfig     `mapstructure:"grpc"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Redis    RedisConfig    `mapstructure:"redis"`
-	Logger   LoggerConfig   `mapstructure:"logger"`
-	JWT      JWTConfig      `mapstructure:"jwt"`
+	Server     ServerConfig     `mapstructure:"server"`
+	GRPC       GRPCConfig       `mapstructure:"grpc"`
+	Database   DatabaseConfig   `mapstructure:"database"`
+	Redis      RedisConfig      `mapstructure:"redis"`
+	Logger     LoggerConfig     `mapstructure:"logger"`
+	JWT        JWTConfig        `mapstructure:"jwt"`
+	Blockchain BlockchainConfig `mapstructure:"blockchain"`
 }
 
 // ServerConfig 服务器配置
@@ -93,4 +95,35 @@ type JWTConfig struct {
 	Expire        int    `mapstructure:"expire"`         // 访问令牌过期时间（秒）
 	RefreshExpire int    `mapstructure:"refresh_expire"` // 刷新令牌过期时间（秒）
 	Issuer        string `mapstructure:"issuer"`         // JWT签发者
+}
+
+// BlockchainConfig 区块链配置
+type BlockchainConfig struct {
+	Enabled   bool            `mapstructure:"enabled"` // 是否启用区块链
+	Type      string          `mapstructure:"type"`    // 区块链类型: fiscobcos, ethereum, fabric
+	FISCOBCOS FISCOBCOSConfig `mapstructure:"fiscobcos"`
+}
+
+// FISCOBCOSConfig FISCO BCOS区块链配置
+type FISCOBCOSConfig struct {
+	NodeURL         string        `mapstructure:"node_url"`          // RPC节点URL
+	GroupID         string        `mapstructure:"group_id"`          // 群组ID
+	ChainID         int           `mapstructure:"chain_id"`          // 链ID
+	AccountKey      string        `mapstructure:"account_key"`       // 账户私钥(十六进制)
+	AccountKeyFile  string        `mapstructure:"account_key_file"`  // 账户私钥文件路径
+	ContractAddress string        `mapstructure:"contract_address"`  // 合约地址
+	ContractABI     string        `mapstructure:"contract_abi"`      // 合约ABI(JSON)
+	ContractABIPath string        `mapstructure:"contract_abi_path"` // 合约ABI(JSON)文件地址
+	Timeout         time.Duration `mapstructure:"timeout"`           // 请求超时时间
+	MaxRetries      int           `mapstructure:"max_retries"`       // 最大重试次数
+	ConfirmTimeout  time.Duration `mapstructure:"confirm_timeout"`   // 交易确认超时
+	GasLimit        uint64        `mapstructure:"gas_limit"`         // Gas限制
+	// 国密配置
+	GMEnable         bool   `mapstructure:"gm_enable"`           // 是否启用国密
+	GMAccountKey     string `mapstructure:"gm_account_key"`      // 国密私钥
+	GMAccountCert    string `mapstructure:"gm_account_cert"`     // 国密证书
+	GMAccountKeyFile string `mapstructure:"gm_account_key_file"` // 国密私钥文件
+	GMSSLCA          string `mapstructure:"gm_ssl_ca"`           // 国密CA证书
+	GMSSLCert        string `mapstructure:"gm_ssl_cert"`         // 国密节点证书
+	GMSSLKey         string `mapstructure:"gm_ssl_key"`          // 国密节点私钥
 }

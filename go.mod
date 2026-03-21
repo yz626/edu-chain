@@ -22,6 +22,7 @@ require (
 )
 
 require (
+	github.com/FISCO-BCOS/go-sdk v1.1.1 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
