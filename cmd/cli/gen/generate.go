@@ -16,7 +16,7 @@ func main() {
 	}
 
 	// 初始化数据库连接
-	if err := db.Init(cfg); err != nil {
+	if err := db.Init(&cfg.Database); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.Close()

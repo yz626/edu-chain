@@ -29,9 +29,9 @@ type Logger struct {
 }
 
 // NewLogger 初始化全局日志
-func NewLogger(cfg *config.Config) (*Logger, error) {
+func NewLogger(cfg *config.LoggerConfig) (*Logger, error) {
 	once.Do(func() {
-		logger, err := newLogger(FromConfig(&cfg.Logger))
+		logger, err := newLogger(FromConfig(cfg))
 		if err != nil {
 			return
 		}

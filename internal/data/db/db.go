@@ -29,19 +29,13 @@ var (
 )
 
 // NewDB 创建数据库连接
-func NewDB(cfg *config.Config) (*gorm.DB, error) {
+func NewDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	var err error
 
-	// 配置GORM日志级别
-	logLevel := logger.Info
-	if cfg.Server.Mode == "release" {
-		logLevel = logger.Warn
-	}
-
 	// 连接数据库
-	dsn := cfg.Database.MySQLDSN()
+	dsn := cfg.MySQLDSN()
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
+		Logger: logger.Default.LogMode(logger.Info),
 		NowFunc: func() time.Time {
 			return time.Now().Local()
 		},
@@ -58,13 +52,13 @@ func NewDB(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// 设置最大空闲连接数
-	sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	// 设置最大打开连接数
-	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
 	// 设置连接最大存活时间
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.MaxLifetime) * time.Second)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
 	// 设置连接超时时间
-	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Database.Timeout) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Timeout) * time.Second)
 
 	fmt.Println("Database connected successfully")
 	return database, nil
@@ -82,7 +76,7 @@ func NewDBCloser(db *gorm.DB) (func() error, error) {
 }
 
 // Init 初始化全局数据库连接（保留向后兼容）
-func Init(cfg *config.Config) error {
+func Init(cfg *config.DatabaseConfig) error {
 	db, err := NewDB(cfg)
 	if err != nil {
 		return err

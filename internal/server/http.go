@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/yz626/edu-chain/config"
+	v1 "github.com/yz626/edu-chain/internal/routes/v1"
 	"github.com/yz626/edu-chain/pkg/logger"
 )
 
@@ -25,20 +26,13 @@ type HTTPServer struct {
 // HTTPServerSet Wire Provider Set
 var HTTPServerSet = wire.NewSet(
 	NewHTTPServer,
-	wire.Bind(new(IHTTPServer), new(*HTTPServer)),
 )
 
-// IHTTPServer HTTP服务器接口
-type IHTTPServer interface {
-	Start() error
-	StartWithAddr(addr string) error
-	GetRouter() *gin.Engine
-	InitMiddlewares()
-}
-
 // NewHTTPServer 创建HTTP服务器（Wire 注入点）
-func NewHTTPServer(cfg *config.Config, router *gin.Engine, log *logger.Logger) *HTTPServer {
+func NewHTTPServer(cfg *config.Config, log *logger.Logger) *HTTPServer {
 	gin.SetMode(cfg.Server.Mode)
+	router := gin.New()
+	v1.Register(router)
 
 	server := &http.Server{
 		Addr:           cfg.Server.Addr(),
