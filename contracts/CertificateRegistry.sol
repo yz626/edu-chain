@@ -1,345 +1,460 @@
-// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.4.25;
+﻿// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.11;
 
 /**
- * @title CertificateRegistry
- * @dev 证书注册表智能合约 - 用于在FISCO BCOS上管理教育证书
+ * @title  CertificateRegistry
+ * @notice EduChain 教育证书链上存证合约
+ *
+ * @dev 设计原则
+ *   1. 合约只负责链上核心数据存证（证书哈希 + 状态），
+ *      详细业务数据（姓名、专业等）存储在链下 MySQL，
+ *      通过 certId（链下 UUID 转 bytes32）与链上记录关联。
+ *   2. 结构清晰：Owner 管理 → 机构授权 → 证书颁发/撤销/恢复 → 查询验证。
+ *   3. 避免过度复杂：不引入 NFT/Token，不做链上分页，不在链上存储大量字符串。
+ *
+ * 角色说明
+ *   owner  : 合约部署者（监管方/教育部门），负责授权颁发机构
+ *   issuer : 授权的颁发机构（高校），负责颁发/撤销/恢复证书
  */
 contract CertificateRegistry {
-    
-    // 证书事件
-    // 证书颁发事件
-    // certId: 证书ID
-    // issuer: 颁发机构地址
-    // timestamp: 颁发时间
+
+    // =========================================================
+    // 自定义错误（比 require(false, "msg") 节省 gas）
+    // =========================================================
+
+    error Unauthorized();                       // 调用者无权限
+    error ZeroAddress();                        // 传入了零地址
+    error EmptyParam();                         // 必填参数为空
+    error BatchEmpty();                         // 批量数组长度为 0
+    error ArrayLengthMismatch();                // 两个并行数组长度不同
+    error ContractPaused();                     // 合约处于暂停状态
+    error ContractNotPaused();                  // 合约未暂停（unpause 前置检查）
+    error IssuerNotAuthorized(address issuer);  // 机构未被授权
+    error CertAlreadyExists(bytes32 certId);    // 证书 ID 重复
+    error CertNotFound(bytes32 certId);         // 证书不存在
+    error CertAlreadyRevoked(bytes32 certId);   // 证书已撤销
+    error CertNotRevoked(bytes32 certId);       // 证书未撤销（无法恢复）
+    error NotCertIssuer(bytes32 certId);        // 非本证书的颁发机构
+
+    // =========================================================
+    // 数据结构
+    // =========================================================
+
+    /**
+     * @dev 链上证书记录（只存核心字段）
+     *
+     * certHash     : 证书完整内容的 SHA-256 哈希，用于链下数据完整性校验
+     * issuer       : 颁发机构区块链地址
+     * issuedAt     : 颁发时间戳（Unix 秒，uint64 足够用到 year 2554）
+     * revoked      : 是否已撤销
+     * revokedAt    : 撤销时间戳（0 = 未撤销）
+     * revokeReason : 撤销原因简述（详情存链下）
+     */
+    struct CertRecord {
+        bytes32 certHash;
+        address issuer;
+        uint64  issuedAt;
+        bool    revoked;
+        uint64  revokedAt;
+        string  revokeReason;
+    }
+
+    /**
+     * @dev 颁发机构信息
+     *
+     * name         : 机构名称（便于链上核查）
+     * authorized   : 当前是否处于授权状态
+     * authorizedAt : 最近一次授权时间戳
+     */
+    struct IssuerInfo {
+        string name;
+        bool   authorized;
+        uint64 authorizedAt;
+    }
+
+    // =========================================================
+    // 状态变量
+    // =========================================================
+
+    /// @dev 合约所有者（监管方）
+    address private _owner;
+
+    /// @dev 紧急暂停标志
+    bool private _paused;
+
+    /// @dev certId => 证书记录
+    mapping(bytes32 => CertRecord) private _certs;
+
+    /// @dev certId => 是否已存在（快速检查，避免读整个 struct）
+    mapping(bytes32 => bool) private _certExists;
+
+    /// @dev 机构地址 => 机构信息
+    mapping(address => IssuerInfo) private _issuers;
+
+    /// @dev 已颁发证书总数
+    uint256 private _totalIssued;
+
+    /// @dev 已撤销证书净数（恢复后减回）
+    uint256 private _totalRevoked;
+
+    // =========================================================
+    // 事件
+    // =========================================================
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event Paused(address indexed by);
+    event Unpaused(address indexed by);
+
+    /// @notice 机构被授权（或重新授权）
+    event IssuerAuthorized(address indexed issuer, string name, uint64 timestamp);
+
+    /// @notice 机构授权被撤销
+    event IssuerRevoked(address indexed issuer, uint64 timestamp);
+
+    /// @notice 单张证书上链
     event CertificateIssued(
-        string certId, 
+        bytes32 indexed certId,
+        bytes32 indexed certHash,
         address indexed issuer,
-        uint256 timestamp
+        uint64          timestamp
     );
-    
-    // 撤销证书事件
-    // certId: 撤销的证书ID
-    // reason: 撤销原因
-    // timestamp: 撤销时间
+
+    /// @notice 证书被撤销
     event CertificateRevoked(
-        string certId,
-        string reason,
-        uint256 timestamp
+        bytes32 indexed certId,
+        string          reason,
+        address indexed by,
+        uint64          timestamp
     );
-    
-    // 存储证书的映射 - 使用单独的映射存储每个字段以避免栈溢出
-    // key: 证书ID
-    mapping(string => string) private certStudentIds;   // 学生ID
-    mapping(string => string) private certStudentNames; // 学生姓名
-    mapping(string => string) private certCourseNames;  // 课程名称
-    mapping(string => string) private certCourseScores; // 课程成绩
-    mapping(string => string) private certIssuers; // 签发者
-    mapping(string => uint256) private certIssueDates; // 签发时间
-    mapping(string => bool) private certRevoked; // 是否吊销
-    mapping(string => string) private certRevokeReasons; // 吊销原因
-    
-    // 地址到机构名称的映射
-    // key: 区块链地址
-    // value: 机构名称
-    mapping(address => string) private issuers;
-    
-    // 证书总数
-    uint256 private certificateCount;
-    
-    // 合约所有者
-    address private owner;
-    
-    // 修饰符：仅合约所有者
+
+    /// @notice 证书被恢复（撤销操作被撤回）
+    event CertificateRestored(
+        bytes32 indexed certId,
+        address indexed by,
+        uint64          timestamp
+    );
+
+    /// @notice 批量颁发完成
+    event BatchIssued(address indexed issuer, uint256 count, uint64 timestamp);
+
+    // =========================================================
+    // 修饰符
+    // =========================================================
+
     modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
+        if (msg.sender != _owner) revert Unauthorized();
         _;
     }
-    
-    // 修饰符：仅授权颁发机构
+
     modifier onlyIssuer() {
-        require(bytes(issuers[msg.sender]).length > 0, "Not an authorized issuer");
+        if (!_issuers[msg.sender].authorized) revert IssuerNotAuthorized(msg.sender);
         _;
     }
-    
+
+    modifier whenNotPaused() {
+        if (_paused) revert ContractPaused();
+        _;
+    }
+
+    modifier whenPaused() {
+        if (!_paused) revert ContractNotPaused();
+        _;
+    }
+
+    modifier certMustExist(bytes32 certId) {
+        if (!_certExists[certId]) revert CertNotFound(certId);
+        _;
+    }
+
+    // =========================================================
     // 构造函数
-    constructor() {
-        owner = msg.sender;
-    }
-    
+    // =========================================================
+
     /**
-     * @dev 添加授权颁发机构
-     * @param _issuer 机构地址
-     * @param _name 机构名称
+     * @notice 部署合约
+     * @param ownerName 部署机构名称（如 "Ministry of Education"）
+     *                  部署者自动成为 owner 并获得颁发机构资格
      */
-    function addIssuer(address _issuer, string _name) public onlyOwner {
-        issuers[_issuer] = _name;
+    constructor(string memory ownerName) {
+        if (bytes(ownerName).length == 0) revert EmptyParam();
+        _owner  = msg.sender;
+        _paused = false;
+        uint64 ts = uint64(block.timestamp);
+        _issuers[msg.sender] = IssuerInfo({
+            name:         ownerName,
+            authorized:   true,
+            authorizedAt: ts
+        });
+        emit IssuerAuthorized(msg.sender, ownerName, ts);
     }
-    
-    /**
-     * @dev 自动生成证书ID
-     * @return string 生成的证书ID
-     */
-    function generateCertId() private view returns (string) {
-        // 使用 block.number + block.timestamp + 颁发者 + 证书数量 生成唯一ID
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                block.number,
-                block.timestamp,
-                msg.sender,
-                certificateCount + 1
-            )
-        );
-        
-        // 转换为十六进制字符串
-        return bytes32ToString(hash);
+
+    // =========================================================
+    // Owner 管理
+    // =========================================================
+
+    /// @notice 返回当前合约所有者地址
+    function owner() external view returns (address) {
+        return _owner;
     }
-    
-    /**
-     * @dev bytes32 转 string
-     */
-    function bytes32ToString(bytes32 _bytes32) private pure returns (string) {
-        bytes memory bytesString = new bytes(64);
-        for (uint8 i = 0; i < 32; i++) {
-            bytes1 b = bytes1(_bytes32[i]);
-            bytes1 char = bytes1(uint8(b) / 16);
-            bytesString[i * 2] = charToHexString(char);
-            char = bytes1(uint8(b) - 16 * uint8(char));
-            bytesString[i * 2 + 1] = charToHexString(char);
+
+    /// @notice 转移合约所有权
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert ZeroAddress();
+        address prev = _owner;
+        _owner = newOwner;
+        emit OwnershipTransferred(prev, newOwner);
+    }
+
+    // =========================================================
+    // 紧急暂停
+    // =========================================================
+
+    /// @notice 暂停合约（仅 owner，紧急情况使用）
+    function pause() external onlyOwner whenNotPaused {
+        _paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /// @notice 恢复合约运行
+    function unpause() external onlyOwner whenPaused {
+        _paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    /// @notice 查询合约是否已暂停
+    function paused() external view returns (bool) {
+        return _paused;
+    }
+
+    // =========================================================
+    // 颁发机构管理（仅 owner）
+    // =========================================================
+
+    /// @notice 添加或重新授权一个颁发机构
+    function addIssuer(address issuer, string calldata name) external onlyOwner {
+        if (issuer == address(0)) revert ZeroAddress();
+        if (bytes(name).length == 0) revert EmptyParam();
+        uint64 ts = uint64(block.timestamp);
+        _issuers[issuer] = IssuerInfo({ name: name, authorized: true, authorizedAt: ts });
+        emit IssuerAuthorized(issuer, name, ts);
+    }
+
+    /// @notice 批量添加授权颁发机构
+    function addIssuerBatch(address[] calldata issuers, string[] calldata names) external onlyOwner {
+        uint256 len = issuers.length;
+        if (len == 0) revert BatchEmpty();
+        if (len != names.length) revert ArrayLengthMismatch();
+        uint64 ts = uint64(block.timestamp);
+        for (uint256 i = 0; i < len; ++i) {
+            if (issuers[i] == address(0)) revert ZeroAddress();
+            if (bytes(names[i]).length == 0) revert EmptyParam();
+            _issuers[issuers[i]] = IssuerInfo({ name: names[i], authorized: true, authorizedAt: ts });
+            emit IssuerAuthorized(issuers[i], names[i], ts);
         }
-        return string(bytesString);
     }
-    
+
+    /// @notice 撤销机构授权（历史证书记录不受影响，链上证据永久保留）
+    function revokeIssuer(address issuer) external onlyOwner {
+        if (issuer == address(0)) revert ZeroAddress();
+        if (!_issuers[issuer].authorized) revert IssuerNotAuthorized(issuer);
+        _issuers[issuer].authorized = false;
+        emit IssuerRevoked(issuer, uint64(block.timestamp));
+    }
+
+    /// @notice 查询机构授权信息
+    function getIssuerInfo(address issuer)
+        external view
+        returns (bool authorized, string memory name, uint64 authorizedAt)
+    {
+        IssuerInfo storage info = _issuers[issuer];
+        return (info.authorized, info.name, info.authorizedAt);
+    }
+
+    // =========================================================
+    // 证书颁发（仅授权机构，合约未暂停时）
+    // =========================================================
+
     /**
-     * @dev 单字节转十六进制字符
+     * @notice 单张证书上链存证
+     * @param certId   链下证书唯一标识（bytes32）
+     *                 推荐：keccak256(abi.encodePacked(uuidString))
+     * @param certHash 证书完整数据的 SHA-256 哈希（bytes32）
      */
-    function charToHexString(bytes1 _char) private pure returns (bytes1) {
-        if (_char >= 0x30 && _char <= 0x39) {
-            return bytes1(uint8(_char) - 0x30);
-        } else if (_char >= 0x61 && _char <= 0x66) {
-            return bytes1(uint8(_char) - 0x61 + 10);
-        } else if (_char >= 0x41 && _char <= 0x46) {
-            return bytes1(uint8(_char) - 0x41 + 10);
+    function issueCertificate(bytes32 certId, bytes32 certHash) external onlyIssuer whenNotPaused {
+        if (certId   == bytes32(0)) revert EmptyParam();
+        if (certHash == bytes32(0)) revert EmptyParam();
+        if (_certExists[certId]) revert CertAlreadyExists(certId);
+        uint64 ts = uint64(block.timestamp);
+        _certs[certId] = CertRecord({
+            certHash:     certHash,
+            issuer:       msg.sender,
+            issuedAt:     ts,
+            revoked:      false,
+            revokedAt:    0,
+            revokeReason: ""
+        });
+        _certExists[certId] = true;
+        unchecked { ++_totalIssued; }
+        emit CertificateIssued(certId, certHash, msg.sender, ts);
+    }
+
+    /**
+     * @notice 批量证书上链存证
+     * @param certIds    证书 ID 数组
+     * @param certHashes 对应的证书内容哈希数组（须与 certIds 等长）
+     */
+    function issueCertificateBatch(
+        bytes32[] calldata certIds,
+        bytes32[] calldata certHashes
+    ) external onlyIssuer whenNotPaused {
+        uint256 len = certIds.length;
+        if (len == 0) revert BatchEmpty();
+        if (len != certHashes.length) revert ArrayLengthMismatch();
+        uint64 ts = uint64(block.timestamp);
+        for (uint256 i = 0; i < len; ++i) {
+            bytes32 cid  = certIds[i];
+            bytes32 hash = certHashes[i];
+            if (cid  == bytes32(0)) revert EmptyParam();
+            if (hash == bytes32(0)) revert EmptyParam();
+            if (_certExists[cid]) revert CertAlreadyExists(cid);
+            _certs[cid] = CertRecord({
+                certHash:     hash,
+                issuer:       msg.sender,
+                issuedAt:     ts,
+                revoked:      false,
+                revokedAt:    0,
+                revokeReason: ""
+            });
+            _certExists[cid] = true;
+            emit CertificateIssued(cid, hash, msg.sender, ts);
         }
-        return bytes1(0x30);
+        unchecked { _totalIssued += len; }
+        emit BatchIssued(msg.sender, len, ts);
     }
-    
+
+    // =========================================================
+    // 证书撤销与恢复（仅原颁发机构，合约未暂停时）
+    // =========================================================
+
     /**
-     * @dev 检查证书是否存在
+     * @notice 撤销证书
+     * @dev  只有该证书的原颁发机构可以撤销，防止跨机构误操作
+     * @param certId 证书 ID
+     * @param reason 撤销原因简述（详情存链下）
      */
-    function certExists(string _certId) private view returns (bool) {
-        return bytes(certStudentIds[_certId]).length > 0;
+    function revokeCertificate(bytes32 certId, string calldata reason)
+        external onlyIssuer whenNotPaused certMustExist(certId)
+    {
+        CertRecord storage rec = _certs[certId];
+        if (rec.revoked)              revert CertAlreadyRevoked(certId);
+        if (rec.issuer != msg.sender) revert NotCertIssuer(certId);
+        uint64 ts = uint64(block.timestamp);
+        rec.revoked      = true;
+        rec.revokedAt    = ts;
+        rec.revokeReason = reason;
+        unchecked { ++_totalRevoked; }
+        emit CertificateRevoked(certId, reason, msg.sender, ts);
     }
-    
+
     /**
-     * @dev 自动颁发证书（合约自动生成ID）
-     * @param _studentId 学号
-     * @param _studentName 学生姓名
-     * @param _courseName 课程名称
-     * @param _courseScore 课程成绩
-     * @param _issueDate 颁发日期
-     * @return string 生成的证书ID
+     * @notice 恢复被撤销的证书（撤销操作的撤回）
+     * @dev  只有该证书的原颁发机构可以恢复
+     * @param certId 证书 ID
      */
-    function issueCertificateAuto(
-        string _studentId,
-        string _studentName,
-        string _courseName,
-        string _courseScore,
-        uint256 _issueDate
-    ) public onlyIssuer returns (string) {
-        // 自动生成证书ID
-        string memory certId = generateCertId();
-        
-        // 检查ID是否已存在
-        require(!certExists(certId), "Certificate ID collision");
-        
-        // 存储证书数据到各个映射
-        certStudentIds[certId] = _studentId;
-        certStudentNames[certId] = _studentName;
-        certCourseNames[certId] = _courseName;
-        certCourseScores[certId] = _courseScore;
-        certIssuers[certId] = issuers[msg.sender];
-        certIssueDates[certId] = _issueDate;
-        certRevoked[certId] = false;
-        
-        certificateCount++;
-        
-        CertificateIssued(certId, msg.sender, block.timestamp);
-        
-        return certId;
+    function restoreCertificate(bytes32 certId)
+        external onlyIssuer whenNotPaused certMustExist(certId)
+    {
+        CertRecord storage rec = _certs[certId];
+        if (!rec.revoked)             revert CertNotRevoked(certId);
+        if (rec.issuer != msg.sender) revert NotCertIssuer(certId);
+        uint64 ts = uint64(block.timestamp);
+        rec.revoked      = false;
+        rec.revokedAt    = 0;
+        rec.revokeReason = "";
+        unchecked { --_totalRevoked; }
+        emit CertificateRestored(certId, msg.sender, ts);
     }
-    
-    /**
-     * @dev 颁发证书（手动指定ID）
-     * @param _certId 证书ID（手动传入）
-     * @param _studentId 学号
-     * @param _studentName 学生姓名
-     * @param _courseName 课程名称
-     * @param _courseScore 课程成绩
-     * @param _issueDate 颁发日期
-     */
-    function issueCertificate(
-        string _certId,
-        string _studentId,
-        string _studentName,
-        string _courseName,
-        string _courseScore,
-        uint256 _issueDate
-    ) public onlyIssuer {
-        require(!certExists(_certId), "Certificate already exists");
-        
-        // 存储证书数据到各个映射
-        certStudentIds[_certId] = _studentId;
-        certStudentNames[_certId] = _studentName;
-        certCourseNames[_certId] = _courseName;
-        certCourseScores[_certId] = _courseScore;
-        certIssuers[_certId] = issuers[msg.sender];
-        certIssueDates[_certId] = _issueDate;
-        certRevoked[_certId] = false;
-        
-        certificateCount++;
-        
-        CertificateIssued(_certId, msg.sender, block.timestamp);
+
+    // =========================================================
+    // 查询与验证（纯读函数，无 gas 消耗）
+    // =========================================================
+
+    /// @notice 查询证书是否存在
+    function certExists(bytes32 certId) external view returns (bool) {
+        return _certExists[certId];
     }
-    
+
     /**
-     * @dev 查询证书完整信息
-     * @param _certId 证书ID
+     * @notice 获取证书完整链上记录
+     * @param  certId       证书 ID
+     * @return certHash     证书内容哈希
+     * @return issuer       颁发机构地址
+     * @return issuedAt     颁发时间戳
+     * @return revoked      是否已撤销
+     * @return revokedAt    撤销时间戳（0 = 未撤销）
+     * @return revokeReason 撤销原因
      */
-    function queryCertificate(string _certId) public view returns (
-        string,
-        string,
-        string,
-        string,
-        string
-    ) {
-        require(certExists(_certId), "Certificate not found");
-        
-        return (
-            certStudentIds[_certId],
-            certStudentNames[_certId],
-            certCourseNames[_certId],
-            certCourseScores[_certId],
-            certIssuers[_certId]
-        );
+    function getCertificate(bytes32 certId)
+        external view certMustExist(certId)
+        returns (
+            bytes32       certHash,
+            address       issuer,
+            uint64        issuedAt,
+            bool          revoked,
+            uint64        revokedAt,
+            string memory revokeReason
+        )
+    {
+        CertRecord storage rec = _certs[certId];
+        return (rec.certHash, rec.issuer, rec.issuedAt, rec.revoked, rec.revokedAt, rec.revokeReason);
     }
-    
+
     /**
-     * @dev 查询证书颁发日期和状态
+     * @notice 验证证书：确认链上哈希与传入哈希一致，且证书未被撤销
+     * @param  certId   证书 ID
+     * @param  certHash 待验证的证书内容哈希
+     * @return valid    true = 哈希匹配且证书有效
+     * @return revoked  true = 证书已被撤销
      */
-    function queryCertificateExtra(string _certId) public view returns (
-        uint256,
-        bool
-    ) {
-        require(certExists(_certId), "Certificate not found");
-        
-        return (
-            certIssueDates[_certId],
-            certRevoked[_certId]
-        );
+    function verifyCertificate(bytes32 certId, bytes32 certHash)
+        external view
+        returns (bool valid, bool revoked)
+    {
+        if (!_certExists[certId]) return (false, false);
+        CertRecord storage rec = _certs[certId];
+        revoked = rec.revoked;
+        valid   = (!revoked) && (rec.certHash == certHash);
     }
-    
+
     /**
-     * @dev 验证证书
-     * @param _certId 证书ID
-     * @return bool 证书是否存在且未撤销
+     * @notice 批量验证证书（一次调用验证多张，节省 RPC 调用次数）
+     * @param  certIds    证书 ID 数组
+     * @param  certHashes 对应的证书内容哈希数组（须与 certIds 等长）
+     * @return valids     每张证书是否有效
+     * @return revokeds   每张证书是否已撤销
      */
-    function verifyCertificate(string _certId) public view returns (bool) {
-        return certExists(_certId) && !getRevoked(_certId);
+    function verifyCertificateBatch(
+        bytes32[] calldata certIds,
+        bytes32[] calldata certHashes
+    ) external view returns (bool[] memory valids, bool[] memory revokeds) {
+        uint256 len = certIds.length;
+        if (len != certHashes.length) revert ArrayLengthMismatch();
+        valids   = new bool[](len);
+        revokeds = new bool[](len);
+        for (uint256 i = 0; i < len; ++i) {
+            if (!_certExists[certIds[i]]) continue;
+            CertRecord storage rec = _certs[certIds[i]];
+            revokeds[i] = rec.revoked;
+            valids[i]   = (!rec.revoked) && (rec.certHash == certHashes[i]);
+        }
     }
-    
-    /**
-     * @dev 撤销证书
-     * @param _certId 证书ID
-     * @param _reason 撤销原因
-     */
-    function revokeCertificate(string _certId, string _reason) public onlyIssuer {
-        require(certExists(_certId), "Certificate not found");
-        require(!getRevoked(_certId), "Certificate already revoked");
-        
-        certRevoked[_certId] = true;
-        certRevokeReasons[_certId] = _reason;
-        
-        certificateCount--;
-        
-        CertificateRevoked(_certId, _reason, block.timestamp);
-    }
-    
-    /**
-     * @dev 获取证书数量
-     * @return uint256 已颁发的证书总数
-     */
-    function getCertificateCount() public view returns (uint256) {
-        return certificateCount;
-    }
-    
-    /**
-     * @dev 获取学号
-     */
-    function getStudentId(string _certId) public view returns (string) {
-        return certStudentIds[_certId];
-    }
-    
-    /**
-     * @dev 获取学生姓名
-     */
-    function getStudentName(string _certId) public view returns (string) {
-        return certStudentNames[_certId];
-    }
-    
-    /**
-     * @dev 获取课程名称
-     */
-    function getCourseName(string _certId) public view returns (string) {
-        return certCourseNames[_certId];
-    }
-    
-    /**
-     * @dev 获取课程成绩
-     */
-    function getCourseScore(string _certId) public view returns (string) {
-        return certCourseScores[_certId];
-    }
-    
-    /**
-     * @dev 获取颁发机构
-     */
-    function getIssuer(string _certId) public view returns (string) {
-        return certIssuers[_certId];
-    }
-    
-    /**
-     * @dev 获取颁发日期
-     */
-    function getIssueDate(string _certId) public view returns (uint256) {
-        return certIssueDates[_certId];
-    }
-    
-    /**
-     * @dev 获取撤销状态
-     */
-    function getRevoked(string _certId) public view returns (bool) {
-        return certRevoked[_certId];
-    }
-    
-    /**
-     * @dev 获取撤销原因
-     */
-    function getRevokeReason(string _certId) public view returns (string) {
-        return certRevokeReasons[_certId];
-    }
-    
-    /**
-     * @dev 获取合约所有者
-     */
-    function getOwner() public view returns (address) {
-        return owner;
-    }
-    
-    /**
-     * @dev 获取机构名称
-     */
-    function getIssuerName(address _addr) public view returns (string) {
-        return issuers[_addr];
+
+    // =========================================================
+    // 统计信息
+    // =========================================================
+
+    /// @notice 返回全局统计数据
+    function getStats() external view returns (uint256 totalIssued, uint256 totalRevoked) {
+        return (_totalIssued, _totalRevoked);
     }
 }
