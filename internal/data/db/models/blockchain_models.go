@@ -12,8 +12,9 @@ import (
 type BlockchainType int
 
 const (
-	BlockchainTypeFabric   BlockchainType = 1 // Fabric
-	BlockchainTypeEthereum BlockchainType = 2 // Ethereum
+	BlockchainTypeFabric    BlockchainType = 1 // Hyperledger Fabric
+	BlockchainTypeEthereum  BlockchainType = 2 // Ethereum 兼容链
+	BlockchainTypeFISCOBCOS BlockchainType = 3 // FISCO BCOS 联盟链
 )
 
 // NetworkStatus 网络状态

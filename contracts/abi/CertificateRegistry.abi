@@ -1,0 +1,325 @@
+[
+  {
+    "inputs": [{"internalType": "string", "name": "ownerName", "type": "string"}],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "CertAlreadyExists",
+    "type": "error"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "CertAlreadyRevoked",
+    "type": "error"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "CertNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "CertNotRevoked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ArrayLengthMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BatchEmpty",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ContractNotPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ContractPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EmptyParam",
+    "type": "error"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "issuer", "type": "address"}],
+    "name": "IssuerNotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "NotCertIssuer",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "address", "name": "by", "type": "address"}
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "address", "name": "by", "type": "address"}
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "previousOwner", "type": "address"},
+      {"indexed": true, "internalType": "address", "name": "newOwner", "type": "address"}
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "issuer", "type": "address"},
+      {"indexed": false, "internalType": "string", "name": "name", "type": "string"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "IssuerAuthorized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "issuer", "type": "address"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "IssuerRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"indexed": true, "internalType": "bytes32", "name": "certHash", "type": "bytes32"},
+      {"indexed": true, "internalType": "address", "name": "issuer", "type": "address"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "CertificateIssued",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"indexed": false, "internalType": "string", "name": "reason", "type": "string"},
+      {"indexed": true, "internalType": "address", "name": "by", "type": "address"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "CertificateRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"indexed": true, "internalType": "address", "name": "by", "type": "address"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "CertificateRestored",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "issuer", "type": "address"},
+      {"indexed": false, "internalType": "uint256", "name": "count", "type": "uint256"},
+      {"indexed": false, "internalType": "uint64", "name": "timestamp", "type": "uint64"}
+    ],
+    "name": "BatchIssued",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "newOwner", "type": "address"}],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address", "name": "issuer", "type": "address"},
+      {"internalType": "string", "name": "name", "type": "string"}
+    ],
+    "name": "addIssuer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address[]", "name": "issuers", "type": "address[]"},
+      {"internalType": "string[]", "name": "names", "type": "string[]"}
+    ],
+    "name": "addIssuerBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "issuer", "type": "address"}],
+    "name": "revokeIssuer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "issuer", "type": "address"}],
+    "name": "getIssuerInfo",
+    "outputs": [
+      {"internalType": "bool", "name": "authorized", "type": "bool"},
+      {"internalType": "string", "name": "name", "type": "string"},
+      {"internalType": "uint64", "name": "authorizedAt", "type": "uint64"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"internalType": "bytes32", "name": "certHash", "type": "bytes32"}
+    ],
+    "name": "issueCertificate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32[]", "name": "certIds", "type": "bytes32[]"},
+      {"internalType": "bytes32[]", "name": "certHashes", "type": "bytes32[]"}
+    ],
+    "name": "issueCertificateBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"internalType": "string", "name": "reason", "type": "string"}
+    ],
+    "name": "revokeCertificate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "restoreCertificate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "certExists",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "bytes32", "name": "certId", "type": "bytes32"}],
+    "name": "getCertificate",
+    "outputs": [
+      {"internalType": "bytes32", "name": "certHash", "type": "bytes32"},
+      {"internalType": "address", "name": "issuer", "type": "address"},
+      {"internalType": "uint64", "name": "issuedAt", "type": "uint64"},
+      {"internalType": "bool", "name": "revoked", "type": "bool"},
+      {"internalType": "uint64", "name": "revokedAt", "type": "uint64"},
+      {"internalType": "string", "name": "revokeReason", "type": "string"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "certId", "type": "bytes32"},
+      {"internalType": "bytes32", "name": "certHash", "type": "bytes32"}
+    ],
+    "name": "verifyCertificate",
+    "outputs": [
+      {"internalType": "bool", "name": "valid", "type": "bool"},
+      {"internalType": "bool", "name": "revoked", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32[]", "name": "certIds", "type": "bytes32[]"},
+      {"internalType": "bytes32[]", "name": "certHashes", "type": "bytes32[]"}
+    ],
+    "name": "verifyCertificateBatch",
+    "outputs": [
+      {"internalType": "bool[]", "name": "valids", "type": "bool[]"},
+      {"internalType": "bool[]", "name": "revokeds", "type": "bool[]"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getStats",
+    "outputs": [
+      {"internalType": "uint256", "name": "totalIssued", "type": "uint256"},
+      {"internalType": "uint256", "name": "totalRevoked", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
