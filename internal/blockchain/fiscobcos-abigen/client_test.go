@@ -29,7 +29,7 @@ func newTestClient(t *testing.T) *Client {
 	if !cfg.Enabled {
 		t.Skip("区块链未启用，跳过测试")
 	}
-	c, err := NewClient(cfg)
+	c, err := NewClientWith(cfg, DialModeContext)
 	if err != nil {
 		t.Fatalf("NewClient 失败: %v", err)
 	}

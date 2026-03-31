@@ -23,8 +23,20 @@ type Client struct {
 var ErrDisabled = fmt.Errorf(
 	"blockchain is disabled (set blockchain.enabled=true in config/blockchain.yaml)")
 
-// NewClient 根据区块链配置初始化客户端。
+// NewClient 使用默认连接方式（DialModeConfigFile）初始化客户端。
+// 在所有平台上均稳定，推荐使用。
 func NewClient(cfg *config.BlockchainConfig) (*Client, error) {
+	return NewClientWith(cfg, DialModeConfigFile)
+}
+
+// NewClientWith 以指定连接方式初始化客户端。
+//
+// mode 可选值：
+//   - DialModeConfigFile（默认）：通过 INI 配置文件调用 bcos_sdk_create_by_config_file，
+//     在 Windows/Linux/macOS 上均稳定。
+//   - DialModeContext：通过 client.DialContext 调用 bcos_sdk_create_config，
+//     仅适用于 Linux/macOS，在 Windows 上会崩溃。
+func NewClientWith(cfg *config.BlockchainConfig, mode DialMode) (*Client, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("blockchain config is nil")
 	}
@@ -33,7 +45,7 @@ func NewClient(cfg *config.BlockchainConfig) (*Client, error) {
 		return c, nil
 	}
 
-	sdkClient, err := dialNode(cfg)
+	sdkClient, err := dialNodeWith(cfg, mode)
 	if err != nil {
 		return nil, fmt.Errorf("dial node: %w", err)
 	}
@@ -55,8 +67,8 @@ func NewClient(cfg *config.BlockchainConfig) (*Client, error) {
 // Enabled 返回区块链是否已启用。
 func (c *Client) Enabled() bool { return c.cfg.Enabled }
 
-// newSDKClient 仅暴露给测试使用：直接返回底层 go-sdk client。
-// 正常业务代码请使用 NewClient。
-func newSDKClient(cfg *config.BlockchainConfig) (*client.Client, error) {
-	return dialNode(cfg)
+// newSDKClient 仅供测试使用：直接返回底层 go-sdk client。
+// 正常业务代码请使用 NewClient 或 NewClientWith。
+func newSDKClient(cfg *config.BlockchainConfig, mode DialMode) (*client.Client, error) {
+	return dialNodeWith(cfg, mode)
 }

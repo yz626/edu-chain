@@ -35,12 +35,12 @@ blockchain:
   tls:
     # 是否启用 TLS（节点 config.ini 中 enable_ssl=true）
     enabled: true
-    # CA 根证书（来自 fisco/sdk/ca.crt）
-    ca_cert: "fisco/sdk/ca.crt"
-    # SDK 客户端证书（来自 fisco/sdk/sdk.crt）
-    client_cert: "fisco/sdk/sdk.crt"
-    # SDK 客户端私钥（来自 fisco/sdk/sdk.key）
-    client_key: "fisco/sdk/sdk.key"
+    # CA 根证书（来自 fisco3/sdk/ca.crt）
+    ca_cert: "fisco3/sdk/ca.crt"
+    # SDK 客户端证书（来自 fisco3/sdk/sdk.crt）
+    client_cert: "fisco3/sdk/sdk.crt"
+    # SDK 客户端私钥（来自 fisco3/sdk/sdk.key）
+    client_key: "fisco3/sdk/sdk.key"
 
   # ---------------------------------------------------------------
   # 账户配置（用于签名交易的私钥账户）
@@ -50,7 +50,7 @@ blockchain:
     # 生产环境请通过环境变量 BLOCKCHAIN_ACCOUNT_KEY 注入
     key: "MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgJ5LEnCnkSS2VlqwNujAH4upjOP9vreWhL8E1fgPX0PGgBwYFK4EEAAqhRANCAASQLg46eGvCgimU0ZtCYYaL8z6OHvqbi5AMwUfF9SvZ8jUxIOgK0TdJwP1RDlq52LNzGBShB4LB4z7o6nML5jZ1"
     # 账户私钥文件路径（key 和 key_file 二选一，key 优先）
-    key_file: "config/certs/account.key"
+    key_file: "fisco3/accounts/account.key"
     # 账户地址（可选，不填则由 key 推导）
     address: "0xa34dbe5817874f4f78f4acf03ff59925e4413056"
 
