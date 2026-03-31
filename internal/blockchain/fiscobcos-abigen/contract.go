@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/yz626/edu-chain/pkg/logger"
 )
 
 // ----------------------------------------------------------------
@@ -20,15 +21,18 @@ func (c *Client) IssueCertificate(ctx context.Context, certID, certHash string) 
 	}
 	certId32, err := certIDToBytes32(certID)
 	if err != nil {
+		c.log.Error("证书 ID 转换失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, err
 	}
 	certHash32, err := hexToBytes32(certHash)
 	if err != nil {
+		c.log.Error("证书哈希转换失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, err
 	}
 	c.session.TransactOpts.Context = ctx
 	_, receipt, err := c.session.IssueCertificate(certId32, certHash32)
 	if err != nil {
+		c.log.Error("上链颁发证书失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, fmt.Errorf("IssueCertificate: %w", err)
 	}
 	return toTxReceipt(receipt), nil
@@ -59,6 +63,7 @@ func (c *Client) IssueCertificateBatch(ctx context.Context, items []BatchItem) (
 	c.session.TransactOpts.Context = ctx
 	_, receipt, err := c.session.IssueCertificateBatch(certIds, certHashes)
 	if err != nil {
+		c.log.Error("批量上链颁发证书失败", logger.Err(err), logger.Int("batch_size", len(items)))
 		return nil, fmt.Errorf("IssueCertificateBatch: %w", err)
 	}
 	return toTxReceipt(receipt), nil
@@ -80,6 +85,7 @@ func (c *Client) RevokeCertificate(ctx context.Context, certID, reason string) (
 	c.session.TransactOpts.Context = ctx
 	_, receipt, err := c.session.RevokeCertificate(certId32, reason)
 	if err != nil {
+		c.log.Error("撤销证书失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, fmt.Errorf("RevokeCertificate: %w", err)
 	}
 	return toTxReceipt(receipt), nil
@@ -97,6 +103,7 @@ func (c *Client) RestoreCertificate(ctx context.Context, certID string) (*TxRece
 	c.session.TransactOpts.Context = ctx
 	_, receipt, err := c.session.RestoreCertificate(certId32)
 	if err != nil {
+		c.log.Error("恢复证书失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, fmt.Errorf("RestoreCertificate: %w", err)
 	}
 	return toTxReceipt(receipt), nil
@@ -131,6 +138,7 @@ func (c *Client) GetCertificate(ctx context.Context, certID string) (*CertOnChai
 	c.session.CallOpts.Context = ctx
 	out, err := c.session.GetCertificate(certId32)
 	if err != nil {
+		c.log.Error("查询证书详情失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, fmt.Errorf("GetCertificate: %w", err)
 	}
 	rec := &CertOnChainRecord{
@@ -162,6 +170,7 @@ func (c *Client) VerifyCertificate(ctx context.Context, certID, certHash string)
 	c.session.CallOpts.Context = ctx
 	out, err := c.session.VerifyCertificate(certId32, certHash32)
 	if err != nil {
+		c.log.Error("验证证书失败", logger.Err(err), logger.String("cert_id", certID))
 		return nil, fmt.Errorf("VerifyCertificate: %w", err)
 	}
 	return &VerifyResult{Valid: out.Valid, Revoked: out.Revoked}, nil
@@ -179,6 +188,7 @@ func (c *Client) AddIssuer(ctx context.Context, address, name string) (*TxReceip
 	c.session.TransactOpts.Context = ctx
 	_, receipt, err := c.session.AddIssuer(common.HexToAddress(address), name)
 	if err != nil {
+		c.log.Error("添加颁发机构失败", logger.Err(err), logger.String("address", address), logger.String("name", name))
 		return nil, fmt.Errorf("AddIssuer: %w", err)
 	}
 	return toTxReceipt(receipt), nil

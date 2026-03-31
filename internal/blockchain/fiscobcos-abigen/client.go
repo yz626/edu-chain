@@ -8,6 +8,7 @@ import (
 
 	"github.com/yz626/edu-chain/config"
 	certificate "github.com/yz626/edu-chain/contracts/go"
+	"github.com/yz626/edu-chain/pkg/logger"
 )
 
 // Client FISCO BCOS 3.0 abigen 方案区块链客户端。
@@ -17,6 +18,7 @@ import (
 type Client struct {
 	cfg     *config.BlockchainConfig                // 区块链配置
 	session *certificate.CertificateRegistrySession // 证书注册合约会话
+	log     *logger.Logger                          // 项目日志
 }
 
 // ErrDisabled 区块链未启用时返回此错误。
@@ -40,19 +42,34 @@ func NewClientWith(cfg *config.BlockchainConfig, mode DialMode) (*Client, error)
 	if cfg == nil {
 		return nil, fmt.Errorf("blockchain config is nil")
 	}
-	c := &Client{cfg: cfg}
+	c := &Client{
+		cfg: cfg,
+		log: logger.GetLogger().Named("blockchain/fiscobcos-abigen"),
+	}
 	if !cfg.Enabled {
+		c.log.Info("区块链未启用，跳过 FISCO-BCOS 客户端初始化")
 		return c, nil
 	}
 
+	c.log.With(
+		logger.Int("dial_mode", int(mode)),
+		logger.String("contract_address", cfg.Contract.Address),
+	).Info("开始初始化 FISCO-BCOS abigen 客户端")
+
 	sdkClient, err := dialNodeWith(cfg, mode)
 	if err != nil {
+		c.log.Error("连接区块链节点失败", logger.Err(err))
 		return nil, fmt.Errorf("dial node: %w", err)
 	}
 
 	address := common.HexToAddress(cfg.Contract.Address)
 	instance, err := certificate.NewCertificateRegistry(address, sdkClient)
 	if err != nil {
+		c.log.Error(
+			"初始化合约绑定失败",
+			logger.Err(err),
+			logger.String("contract_address", cfg.Contract.Address),
+		)
 		return nil, fmt.Errorf("init contract binding: %w", err)
 	}
 
@@ -61,6 +78,7 @@ func NewClientWith(cfg *config.BlockchainConfig, mode DialMode) (*Client, error)
 		CallOpts:     *sdkClient.GetCallOpts(),
 		TransactOpts: *sdkClient.GetTransactOpts(),
 	}
+	c.log.Info("FISCO-BCOS abigen 客户端初始化成功")
 	return c, nil
 }
 

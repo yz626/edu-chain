@@ -4,3 +4,4 @@
 {"level":"info","time":"2026-03-22 00:11:19","logger":"redis","caller":"server/main.go:32","msg":"Redis连接成功","addr":"localhost:6379"}
 {"level":"info","time":"2026-03-22 00:11:19","logger":"redis","caller":"server/main.go:47","msg":"关闭Redis连接"}
 {"level":"info","time":"2026-03-22 00:11:19","logger":"db","caller":"server/main.go:51","msg":"关闭数据库连接","moudel":"data/db"}
+{"level":"info","time":"2026-03-31 14:19:20","logger":"blockchain/fiscobcos-abigen","caller":"fiscobcos-abigen/client.go:57","msg":"开始初始化 FISCO-BCOS abigen 客户端","dial_mode":1,"contract_address":"0xc8ead4b26b2c6ac14c9fd90d9684c9bc2cc40085"}

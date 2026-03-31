@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yz626/edu-chain/pkg/constants"
+	"github.com/yz626/edu-chain/internal/utils/constants"
 	"github.com/yz626/edu-chain/pkg/response"
 )
 
