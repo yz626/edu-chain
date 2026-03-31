@@ -1,3 +1,4 @@
-./fisco/
-./logs/
-./config/certs/
+/fisco/
+/logs/
+/config/certs/
+/cgo
